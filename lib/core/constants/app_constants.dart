@@ -1,6 +1,6 @@
 class AppConstants {
   static const String dbName = 'nest_finance.db';
-  static const int dbVersion = 2;
+  static const int dbVersion = 3;
   
   static const List<String> transactionCategories = [
     'Food & Dining',

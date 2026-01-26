@@ -70,22 +70,45 @@ class FinancialStatsCalculator {
   }
 
   static double calculateFulizaDebt(List<domain.Transaction> transactions) {
-    double fulizaBorrowed = 0;
-    double fulizaRepaid = 0;
+    // Get the most recent Fuliza transaction to extract outstanding balance
+    final fulizaTransactions = transactions.where((t) => 
+      t.description.toLowerCase().contains('fuliza')
+    ).toList();
 
-    for (var t in transactions) {
-      if (t.category == 'Loans' && t.description.toLowerCase().contains('fuliza')) {
-        if (t.description.toLowerCase().contains('repay') || 
-            t.description.toLowerCase().contains('outstanding')) {
-          fulizaRepaid += t.amount;
-        } else if (t.description.toLowerCase().contains('limit used') ||
-                   t.description.toLowerCase().contains('amount is')) {
-          fulizaBorrowed += t.amount;
-        }
+    print('Found ${fulizaTransactions.length} Fuliza transactions');
+
+    if (fulizaTransactions.isEmpty) return 0.0;
+
+    // Sort by date descending to get most recent
+    fulizaTransactions.sort((a, b) => b.date.compareTo(a.date));
+    
+    // Check most recent transaction for outstanding balance
+    final mostRecent = fulizaTransactions.first.description;
+    print('Most recent Fuliza transaction: $mostRecent');
+    
+    final mostRecentLower = mostRecent.toLowerCase();
+    
+    // Extract outstanding balance from messages like:
+    // "Total Fuliza M-Pesa outstanding amount is Ksh336.50"
+    // "outstanding Fuliza M-PESA balance is Ksh100.00"
+    // "partially pay your outstanding F uliza M-PESA balance of Ksh100.00"
+    final patterns = [
+      RegExp(r'outstanding amount is ksh?\s*([\d,]+\.?\d*)', caseSensitive: false),
+      RegExp(r'outstanding.*?(?:is|of).*?ksh?\s*([\d,]+\.?\d*)', caseSensitive: false),
+    ];
+    
+    for (final pattern in patterns) {
+      final match = pattern.firstMatch(mostRecentLower);
+      if (match != null) {
+        final balanceStr = match.group(1)?.replaceAll(',', '') ?? '0';
+        final balance = double.tryParse(balanceStr) ?? 0.0;
+        print('Extracted Fuliza balance: $balance from pattern: ${pattern.pattern}');
+        return balance;
       }
     }
 
-    return fulizaBorrowed - fulizaRepaid;
+    print('No Fuliza balance pattern matched');
+    return 0.0;
   }
 
   static Map<String, double> calculateMonthlyTrend(List<domain.Transaction> transactions) {

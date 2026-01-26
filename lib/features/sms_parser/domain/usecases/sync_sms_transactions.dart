@@ -15,7 +15,10 @@ class SyncSmsTransactionsUseCase {
 
     final smsTransactions = await smsParser.parseTransactionSms(daysBack: daysBack);
     
+    int addedCount = 0;
     for (var sms in smsTransactions) {
+      // Create unique ID from SMS content and timestamp to prevent duplicates
+      final transactionId = '${sms.description.hashCode}_${sms.amount}_${sms.date.millisecondsSinceEpoch}';
       final transaction = Transaction(
         id: const Uuid().v4(),
         amount: sms.amount,
@@ -23,10 +26,12 @@ class SyncSmsTransactionsUseCase {
         description: sms.description,
         date: sms.date,
         type: sms.type,
+        transactionId: transactionId,
       );
       await transactionRepository.addTransaction(transaction);
+      addedCount++;
     }
 
-    return smsTransactions.length;
+    return addedCount;
   }
 }

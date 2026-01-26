@@ -9,6 +9,7 @@ class TransactionModel {
       description: json['description'],
       date: DateTime.parse(json['date']),
       type: json['type'],
+      transactionId: json['transactionId'],
     );
   }
 
@@ -20,6 +21,7 @@ class TransactionModel {
       'description': transaction.description,
       'date': transaction.date.toIso8601String(),
       'type': transaction.type,
+      'transactionId': transaction.transactionId,
     };
   }
 }

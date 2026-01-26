@@ -32,7 +32,8 @@ class LocalDatabase {
         category TEXT,
         description TEXT,
         date TEXT,
-        type TEXT
+        type TEXT,
+        transactionId TEXT UNIQUE
       )
     ''');
     
@@ -63,11 +64,51 @@ class LocalDatabase {
         )
       ''');
     }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE transactions ADD COLUMN transactionId TEXT');
+    }
   }
 
   Future<void> insertTransaction(domain.Transaction transaction) async {
     final db = await database;
-    await db.insert('transactions', TransactionModel.toJson(transaction));
+    try {
+      // Check if transaction with same transactionId already exists
+      if (transaction.transactionId != null) {
+        print('Inserting transaction with ID: ${transaction.transactionId}');
+        final existing = await db.query(
+          'transactions',
+          where: 'transactionId = ?',
+          whereArgs: [transaction.transactionId],
+          limit: 1,
+        );
+        if (existing.isNotEmpty) {
+          print('Duplicate found, skipping: ${transaction.transactionId}');
+          return; // Skip duplicate
+        }
+      }
+      
+      await db.insert(
+        'transactions',
+        TransactionModel.toJson(transaction),
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+      print('Transaction inserted successfully: ${transaction.transactionId}');
+    } catch (e) {
+      print('Error inserting transaction: $e');
+    }
+  }
+
+  Future<void> removeDuplicateTransactions() async {
+    final db = await database;
+    // Delete duplicates keeping only one occurrence based on description, amount, and date
+    await db.execute('''
+      DELETE FROM transactions 
+      WHERE rowid NOT IN (
+        SELECT MIN(rowid) 
+        FROM transactions 
+        GROUP BY description, amount, strftime('%Y-%m-%d %H:%M', date)
+      )
+    ''');
   }
 
   Future<List<domain.Transaction>> getTransactions() async {

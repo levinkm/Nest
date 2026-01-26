@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../sms_parser/presentation/bloc/sms_sync_bloc.dart';
 import '../../../../core/utils/currency_helper.dart';
+import '../../../transactions/data/datasources/local_database.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -51,116 +52,108 @@ class DashboardPage extends StatelessWidget {
                               transactions,
                             );
 
-                        return CustomScrollView(
-                          slivers: [
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          'Dashboard',
-                                          style: TextStyle(
-                                            color: AppColors.textPrimary,
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                        return RefreshIndicator(
+                          onRefresh: () => _syncSms(context),
+                          color: AppColors.primary,
+                          child: CustomScrollView(
+                            slivers: [
+                              SliverToBoxAdapter(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Dashboard',
+                                        style: TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.sync_rounded,
-                                            color: AppColors.primary,
-                                          ),
-                                          onPressed: () => _syncSms(context),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 24),
-                                    _buildBalanceCard(
-                                      stats.netBalance,
-                                      currency,
-                                    ),
-                                    const SizedBox(height: 16),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      _buildBalanceCard(
+                                        stats.netBalance,
+                                        currency,
+                                      ),
+                                      const SizedBox(height: 16),
 
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: _buildStatCard(
-                                            'Income',
-                                            stats.totalIncome,
-                                            AppColors.income,
-                                            Icons.arrow_downward_rounded,
-                                            currency,
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _buildStatCard(
+                                              'Income',
+                                              stats.totalIncome,
+                                              AppColors.income,
+                                              Icons.arrow_downward_rounded,
+                                              currency,
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: _buildStatCard(
-                                            'Expense',
-                                            stats.totalExpense,
-                                            AppColors.expense,
-                                            Icons.arrow_upward_rounded,
-                                            currency,
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: _buildStatCard(
+                                              'Expense',
+                                              stats.totalExpense,
+                                              AppColors.expense,
+                                              Icons.arrow_upward_rounded,
+                                              currency,
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: _buildStatCard(
-                                            'Debt',
-                                            stats.totalDebt,
-                                            AppColors.warning,
-                                            Icons.credit_card_rounded,
-                                            currency,
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _buildStatCard(
+                                              'Debt',
+                                              stats.totalDebt,
+                                              AppColors.warning,
+                                              Icons.credit_card_rounded,
+                                              currency,
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: _buildStatCard(
-                                            'Fuliza',
-                                            fulizaDebt,
-                                            AppColors.error,
-                                            Icons
-                                                .account_balance_wallet_rounded,
-                                            currency,
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: _buildStatCard(
+                                              'Fuliza',
+                                              fulizaDebt,
+                                              AppColors.error,
+                                              Icons
+                                                  .account_balance_wallet_rounded,
+                                              currency,
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    // const SizedBox(height: 24),
-                                    // _buildInsightsCard(
-                                    //   stats,
-                                    //   fulizaDebt,
-                                    //   currency,
-                                    // ),
-                                    const SizedBox(height: 16),
-                                    _buildSpendingTrendChart(
-                                      transactions,
-                                      currency,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    _buildCategoryPieChart(
-                                      stats.expenseByCategory,
-                                      currency,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    _buildCategoryBreakdown(
-                                      stats.expenseByCategory,
-                                      currency,
-                                    ),
-                                  ],
+                                        ],
+                                      ),
+                                      // const SizedBox(height: 24),
+                                      // _buildInsightsCard(
+                                      //   stats,
+                                      //   fulizaDebt,
+                                      //   currency,
+                                      // ),
+                                      const SizedBox(height: 16),
+                                      _buildSpendingTrendChart(
+                                        transactions,
+                                        currency,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildCategoryPieChart(
+                                        stats.expenseByCategory,
+                                        currency,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildCategoryBreakdown(
+                                        stats.expenseByCategory,
+                                        currency,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         );
                       },
                     );
@@ -180,10 +173,28 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  void _syncSms(BuildContext context) async {
+  Future<void> _syncSms(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     final daysBack = prefs.getInt('sms_days_back') ?? 30;
+    
+    // Clean ALL duplicates first
+    final localDb = LocalDatabase();
+    await localDb.removeDuplicateTransactions();
+    
+    // Reload to show cleaned data immediately
+    context.read<TransactionBloc>().add(const TransactionEvent.loadTransactions());
+    
+    // Then sync new SMS
     context.read<SmsSyncBloc>().add(SmsSyncEvent.syncSms(daysBack: daysBack));
+    
+    // Wait for sync to complete
+    await Future.delayed(const Duration(seconds: 2));
+    
+    // Clean duplicates again after sync
+    await localDb.removeDuplicateTransactions();
+    
+    // Final reload
+    context.read<TransactionBloc>().add(const TransactionEvent.loadTransactions());
   }
 
   Widget _buildBalanceCard(double balance, String currency) {
@@ -447,7 +458,8 @@ class DashboardPage extends StatelessWidget {
 
     for (var t in transactions) {
       final date = t.date;
-      if (date.isAfter(now.subtract(const Duration(days: 7))) && t.type == 'expense') {
+      if (date.isAfter(now.subtract(const Duration(days: 7))) &&
+          t.type == 'expense') {
         final key = '${date.month}/${date.day}';
         if (last7Days.containsKey(key)) {
           last7Days[key] = last7Days[key]! + t.amount;
