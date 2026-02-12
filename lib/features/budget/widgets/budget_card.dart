@@ -4,17 +4,22 @@ import '../data/models/budget_model.dart';
 class BudgetCard extends StatelessWidget {
   final Budget budget;
 
-  const BudgetCard({Key? key, required this.budget}) : super(key: key);
+  const BudgetCard({super.key, required this.budget});
 
   @override
   Widget build(BuildContext context) {
     final progress = budget.percentage / 100;
-    final color = progress >= 1.0 ? Colors.red : progress >= 0.8 ? Colors.orange : Colors.green;
+    final color = progress >= 1.0
+        ? Colors.red
+        : progress >= 0.8
+        ? Colors.orange
+        : Colors.green;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
-        onTap: () => Navigator.pushNamed(context, '/budget/details', arguments: budget),
+        onTap: () =>
+            Navigator.pushNamed(context, '/budget/details', arguments: budget),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -23,14 +28,29 @@ class BudgetCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(budget.category, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text(budget.period.toUpperCase(), style: TextStyle(color: Colors.grey[600])),
+                  Text(
+                    budget.category,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    budget.period.toUpperCase(),
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text('\$${budget.spent.toStringAsFixed(2)} / \$${budget.limit.toStringAsFixed(2)}'),
+              Text(
+                '\$${budget.spent.toStringAsFixed(2)} / \$${budget.limit.toStringAsFixed(2)}',
+              ),
               const SizedBox(height: 8),
-              LinearProgressIndicator(value: progress > 1.0 ? 1.0 : progress, backgroundColor: Colors.grey[300], color: color),
+              LinearProgressIndicator(
+                value: progress > 1.0 ? 1.0 : progress,
+                backgroundColor: Colors.grey[300],
+                color: color,
+              ),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

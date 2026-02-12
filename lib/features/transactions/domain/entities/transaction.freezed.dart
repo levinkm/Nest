@@ -29,6 +29,9 @@ mixin _$Transaction {
   String get type => throw _privateConstructorUsedError;
   String? get transactionId => throw _privateConstructorUsedError;
   bool get isTransfer => throw _privateConstructorUsedError;
+  double get fee => throw _privateConstructorUsedError;
+  String? get accountId => throw _privateConstructorUsedError;
+  String? get toAccountId => throw _privateConstructorUsedError;
 
   /// Serializes this Transaction to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -56,6 +59,9 @@ abstract class $TransactionCopyWith<$Res> {
     String type,
     String? transactionId,
     bool isTransfer,
+    double fee,
+    String? accountId,
+    String? toAccountId,
   });
 }
 
@@ -82,6 +88,9 @@ class _$TransactionCopyWithImpl<$Res, $Val extends Transaction>
     Object? type = null,
     Object? transactionId = freezed,
     Object? isTransfer = null,
+    Object? fee = null,
+    Object? accountId = freezed,
+    Object? toAccountId = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -117,6 +126,18 @@ class _$TransactionCopyWithImpl<$Res, $Val extends Transaction>
                 ? _value.isTransfer
                 : isTransfer // ignore: cast_nullable_to_non_nullable
                       as bool,
+            fee: null == fee
+                ? _value.fee
+                : fee // ignore: cast_nullable_to_non_nullable
+                      as double,
+            accountId: freezed == accountId
+                ? _value.accountId
+                : accountId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            toAccountId: freezed == toAccountId
+                ? _value.toAccountId
+                : toAccountId // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -141,6 +162,9 @@ abstract class _$$TransactionImplCopyWith<$Res>
     String type,
     String? transactionId,
     bool isTransfer,
+    double fee,
+    String? accountId,
+    String? toAccountId,
   });
 }
 
@@ -166,6 +190,9 @@ class __$$TransactionImplCopyWithImpl<$Res>
     Object? type = null,
     Object? transactionId = freezed,
     Object? isTransfer = null,
+    Object? fee = null,
+    Object? accountId = freezed,
+    Object? toAccountId = freezed,
   }) {
     return _then(
       _$TransactionImpl(
@@ -201,6 +228,18 @@ class __$$TransactionImplCopyWithImpl<$Res>
             ? _value.isTransfer
             : isTransfer // ignore: cast_nullable_to_non_nullable
                   as bool,
+        fee: null == fee
+            ? _value.fee
+            : fee // ignore: cast_nullable_to_non_nullable
+                  as double,
+        accountId: freezed == accountId
+            ? _value.accountId
+            : accountId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        toAccountId: freezed == toAccountId
+            ? _value.toAccountId
+            : toAccountId // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -218,6 +257,9 @@ class _$TransactionImpl implements _Transaction {
     required this.type,
     this.transactionId,
     this.isTransfer = false,
+    this.fee = 0.0,
+    this.accountId,
+    this.toAccountId,
   });
 
   factory _$TransactionImpl.fromJson(Map<String, dynamic> json) =>
@@ -240,10 +282,17 @@ class _$TransactionImpl implements _Transaction {
   @override
   @JsonKey()
   final bool isTransfer;
+  @override
+  @JsonKey()
+  final double fee;
+  @override
+  final String? accountId;
+  @override
+  final String? toAccountId;
 
   @override
   String toString() {
-    return 'Transaction(id: $id, amount: $amount, category: $category, description: $description, date: $date, type: $type, transactionId: $transactionId, isTransfer: $isTransfer)';
+    return 'Transaction(id: $id, amount: $amount, category: $category, description: $description, date: $date, type: $type, transactionId: $transactionId, isTransfer: $isTransfer, fee: $fee, accountId: $accountId, toAccountId: $toAccountId)';
   }
 
   @override
@@ -262,7 +311,12 @@ class _$TransactionImpl implements _Transaction {
             (identical(other.transactionId, transactionId) ||
                 other.transactionId == transactionId) &&
             (identical(other.isTransfer, isTransfer) ||
-                other.isTransfer == isTransfer));
+                other.isTransfer == isTransfer) &&
+            (identical(other.fee, fee) || other.fee == fee) &&
+            (identical(other.accountId, accountId) ||
+                other.accountId == accountId) &&
+            (identical(other.toAccountId, toAccountId) ||
+                other.toAccountId == toAccountId));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -277,6 +331,9 @@ class _$TransactionImpl implements _Transaction {
     type,
     transactionId,
     isTransfer,
+    fee,
+    accountId,
+    toAccountId,
   );
 
   /// Create a copy of Transaction
@@ -303,6 +360,9 @@ abstract class _Transaction implements Transaction {
     required final String type,
     final String? transactionId,
     final bool isTransfer,
+    final double fee,
+    final String? accountId,
+    final String? toAccountId,
   }) = _$TransactionImpl;
 
   factory _Transaction.fromJson(Map<String, dynamic> json) =
@@ -324,6 +384,12 @@ abstract class _Transaction implements Transaction {
   String? get transactionId;
   @override
   bool get isTransfer;
+  @override
+  double get fee;
+  @override
+  String? get accountId;
+  @override
+  String? get toAccountId;
 
   /// Create a copy of Transaction
   /// with the given fields replaced by the non-null parameter values.

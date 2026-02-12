@@ -299,7 +299,7 @@ class _ExpectedIncomeBottomSheetState extends State<ExpectedIncomeBottomSheet> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: frequency,
+                  initialValue: frequency,
                   dropdownColor: AppColors.surfaceLight,
                   style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(
@@ -319,7 +319,7 @@ class _ExpectedIncomeBottomSheetState extends State<ExpectedIncomeBottomSheet> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: category,
+                  initialValue: category,
                   dropdownColor: AppColors.surfaceLight,
                   style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(
@@ -393,8 +393,9 @@ class _ExpectedIncomeBottomSheetState extends State<ExpectedIncomeBottomSheet> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (nameController.text.isEmpty ||
-                          amountController.text.isEmpty)
+                          amountController.text.isEmpty) {
                         return;
+                      }
                       final newIncome = {
                         'id': widget.income?['id'] ?? const Uuid().v4(),
                         'name': nameController.text,

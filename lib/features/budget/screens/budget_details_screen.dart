@@ -5,7 +5,7 @@ import '../services/export_service.dart';
 class BudgetDetailsScreen extends StatelessWidget {
   final Budget budget;
 
-  const BudgetDetailsScreen({Key? key, required this.budget}) : super(key: key);
+  const BudgetDetailsScreen({super.key, required this.budget});
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +25,7 @@ class BudgetDetailsScreen extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
-        children: [
-          _buildSummaryCard(),
-        ],
+        children: [_buildSummaryCard()],
       ),
     );
   }

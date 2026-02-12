@@ -24,20 +24,26 @@ class SmsParserDataSource {
   Future<List<SmsTransaction>> parseTransactionSms({int daysBack = 30}) async {
     try {
       developer.log('Calling native SMS reader for last $daysBack days');
-      final List<dynamic> messages = await platform.invokeMethod('getInboxSms', {'daysBack': daysBack});
+      final List<dynamic> messages = await platform.invokeMethod(
+        'getInboxSms',
+        {'daysBack': daysBack},
+      );
       developer.log('Received ${messages.length} messages from native');
-      
+
       List<SmsTransaction> transactions = [];
-      
+
       for (var msg in messages) {
         final body = msg['body'] as String? ?? '';
-        final timestamp = msg['date'] as int? ?? DateTime.now().millisecondsSinceEpoch;
+        final timestamp =
+            msg['date'] as int? ?? DateTime.now().millisecondsSinceEpoch;
         final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-        
+
         final parsed = await _parseMessage(body, date);
         if (parsed != null) {
           transactions.add(parsed);
-          developer.log('Parsed transaction: ${parsed.amount} - ${parsed.category}');
+          developer.log(
+            'Parsed transaction: ${parsed.amount} - ${parsed.category}',
+          );
         }
       }
 
@@ -49,29 +55,55 @@ class SmsParserDataSource {
     }
   }
 
+  Future<List<Map<String, dynamic>>> parseAllSms({int daysBack = 30}) async {
+    try {
+      final List<dynamic> messages = await platform.invokeMethod(
+        'getInboxSms',
+        {'daysBack': daysBack},
+      );
+      return messages.map((msg) => Map<String, dynamic>.from(msg)).toList();
+    } catch (e) {
+      developer.log('Error getting all SMS: $e', error: e);
+      return [];
+    }
+  }
+
   Future<SmsTransaction?> _parseMessage(String body, DateTime date) async {
     if (_isFailedTransaction(body)) {
       developer.log('Skipping failed transaction');
       return null;
     }
 
-    final amountRegex = RegExp(r'(?:Ksh\.?|KES|Rs\.?|INR|₹)\s*(\d+(?:,\d+)*(?:\.\d{2})?)');
+    if (_isNotificationOnly(body)) {
+      developer.log('Skipping notification/reminder message');
+      return null;
+    }
+
+    // Extract balance and Fuliza info
+    final balanceInfo = _extractBalanceInfo(body);
+
+    final amountRegex = RegExp(
+      r'(?:Ksh\.?|KES|Rs\.?|INR|₹)\s*(\d+(?:,\d+)*(?:\.\d{2})?)',
+    );
     final match = amountRegex.firstMatch(body);
-    
+
     if (match == null) return null;
 
     final amount = double.tryParse(match.group(1)!.replaceAll(',', ''));
     if (amount == null) return null;
 
+    // Extract transaction fee
+    final fee = _extractTransactionFee(body);
+
     // Use ML classifier if available, otherwise fallback to rules
     String? type;
     String category;
-    
+
     if (_classifierInitialized) {
       final classification = await _classifier.classify(body);
       type = classification['type'];
       category = classification['category'] ?? 'Other';
-      
+
       if (type == 'skip') {
         developer.log('ML classifier marked as skip');
         return null;
@@ -79,13 +111,14 @@ class SmsParserDataSource {
     } else {
       type = _determineTransactionType(body);
       if (type == null) return null;
-      
+
       final isTransfer = _isInternalTransfer(body);
       category = isTransfer ? 'Transfer' : _categorizeTransaction(body);
     }
 
     final transactionId = _extractTransactionId(body);
     final isTransfer = category == 'Transfer';
+    final counterparty = _extractCounterparty(body, type ?? 'expense');
 
     return SmsTransaction(
       amount: amount,
@@ -95,6 +128,12 @@ class SmsParserDataSource {
       type: type ?? 'expense',
       transactionId: transactionId,
       isTransfer: isTransfer,
+      fee: fee,
+      recordedBalance: balanceInfo['balance'],
+      fulizaBalance: balanceInfo['fulizaBalance'],
+      fulizaDueDate: balanceInfo['dueDate'],
+      ziidiBalance: balanceInfo['ziidiBalance'],
+      counterparty: counterparty,
     );
   }
 
@@ -103,6 +142,44 @@ class SmsParserDataSource {
     final mpesaRegex = RegExp(r'\b([A-Z0-9]{10})\b');
     final match = mpesaRegex.firstMatch(body);
     return match?.group(1);
+  }
+
+  String? _extractCounterparty(String body, String type) {
+    final lowerBody = body.toLowerCase();
+
+    // Ziidi transactions
+    if (lowerBody.contains('ziidi')) {
+      return 'ZIIDI';
+    }
+
+    // For expenses (sent to/paid to)
+    if (type == 'expense') {
+      // "sent to PERSON NAME" or "sent to COMPANY for account"
+      final sentToRegex = RegExp(r'sent to ([A-Z][A-Z\s&.]+?)(?:\s+for account|\s+\d{10}|\s+on)', caseSensitive: false);
+      final sentMatch = sentToRegex.firstMatch(body);
+      if (sentMatch != null) {
+        return sentMatch.group(1)!.trim();
+      }
+
+      // "paid to MERCHANT"
+      final paidToRegex = RegExp(r'paid to ([A-Z][A-Z\s&.]+?)(?:\s+via|\.|\s+on)', caseSensitive: false);
+      final paidMatch = paidToRegex.firstMatch(body);
+      if (paidMatch != null) {
+        return paidMatch.group(1)!.trim();
+      }
+    }
+
+    // For income (received from)
+    if (type == 'income') {
+      // "received from PERSON NAME"
+      final receivedRegex = RegExp(r'(?:received from|from) ([A-Z][A-Z\s&.]+?)(?:\s+\d{10}|\s+on)', caseSensitive: false);
+      final receivedMatch = receivedRegex.firstMatch(body);
+      if (receivedMatch != null) {
+        return receivedMatch.group(1)!.trim();
+      }
+    }
+
+    return null;
   }
 
   bool _isFailedTransaction(String body) {
@@ -119,50 +196,91 @@ class SmsParserDataSource {
     return failureKeywords.any((kw) => body.toLowerCase().contains(kw));
   }
 
-  String? _determineTransactionType(String body) {
+  bool _isNotificationOnly(String body) {
     final lowerBody = body.toLowerCase();
     
-    // Fuliza repayment - expense (paying back loan)
-    if (lowerBody.contains('fuliza') && 
-        (lowerBody.contains('repay') || lowerBody.contains('repaid') || lowerBody.contains('available fuliza'))) {
-      return 'expense';
+    // Loan reminders/notifications (not actual transactions)
+    if ((lowerBody.contains('due on') || lowerBody.contains('is due')) &&
+        !lowerBody.contains('confirmed') &&
+        !lowerBody.contains('fuliza m-pesa amount')) {
+      return true;
     }
     
-    // Fuliza borrowed - expense (taking loan)
-    if (lowerBody.contains('fuliza') && 
-        (lowerBody.contains('limit used') || lowerBody.contains('borrowed'))) {
-      return 'expense';
+    // OTP/verification codes
+    if (lowerBody.contains('verification code') ||
+        lowerBody.contains('otp') ||
+        lowerBody.contains('do not share')) {
+      return true;
     }
     
+    // Marketing/promotional messages
+    if (lowerBody.contains('congratulations') ||
+        lowerBody.contains('you qualify') ||
+        lowerBody.contains('apply now')) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  String? _determineTransactionType(String body) {
+    final lowerBody = body.toLowerCase();
+
+    // Fuliza repayment - skip (handled separately in debt manager)
+    if (lowerBody.contains('fuliza') &&
+        (lowerBody.contains('used to') && 
+         (lowerBody.contains('pay') || lowerBody.contains('repay')))) {
+      return null; // Skip - will be handled by debt manager
+    }
+
+    // Fuliza borrowed - skip (handled separately in debt manager)
+    if (lowerBody.contains('fuliza m-pesa amount is')) {
+      return null; // Skip - will be handled by debt manager
+    }
+
+    // Ziidi/investment withdrawals - income (money coming to M-Pesa)
+    if (lowerBody.contains('withdrawn') && 
+        (lowerBody.contains('ziidi') || lowerBody.contains('transaction code'))) {
+      return 'income';
+    }
+
+    // Ziidi/investment deposits - expense (money leaving M-Pesa)
+    if (lowerBody.contains('invested') && lowerBody.contains('ziidi')) {
+      return 'expense';
+    }
+
+    // M-Pesa received money
+    if (lowerBody.contains('received from') ||
+        lowerBody.contains('you have received')) {
+      return 'income';
+    }
+
     // M-Pesa & Mobile Money patterns
-    if (lowerBody.contains('sent to') || 
+    if (lowerBody.contains('sent to') ||
         lowerBody.contains('paid to') ||
         lowerBody.contains('buy goods') ||
         lowerBody.contains('paybill') ||
-        lowerBody.contains('withdraw') ||
         lowerBody.contains('airtime for')) {
       return 'expense';
     }
-    
-    if (lowerBody.contains('received from') ||
-        lowerBody.contains('you have received') ||
-        lowerBody.contains('deposited')) {
+
+    if (lowerBody.contains('deposited')) {
       return 'income';
     }
-    
+
     // Bank patterns
-    if (lowerBody.contains('debited') || 
+    if (lowerBody.contains('debited') ||
         lowerBody.contains('spent') ||
         lowerBody.contains('paid')) {
       return 'expense';
     }
-    
+
     if (lowerBody.contains('credited') ||
         lowerBody.contains('salary') ||
         lowerBody.contains('refund')) {
       return 'income';
     }
-    
+
     return null;
   }
 
@@ -176,22 +294,68 @@ class SmsParserDataSource {
       'to your.*account',
       'from your.*account',
     ];
-    
-    return transferPatterns.any((pattern) => 
-      RegExp(pattern, caseSensitive: false).hasMatch(body)
+
+    return transferPatterns.any(
+      (pattern) => RegExp(pattern, caseSensitive: false).hasMatch(body),
     );
   }
 
   String _categorizeTransaction(String message) {
     final keywords = {
-      'Food & Dining': ['swiggy', 'zomato', 'restaurant', 'food', 'cafe', 'hotel', 'eatery'],
-      'Shopping': ['amazon', 'flipkart', 'shopping', 'mall', 'supermarket', 'shop', 'store'],
-      'Transportation': ['uber', 'ola', 'petrol', 'fuel', 'matatu', 'boda', 'taxi', 'transport'],
-      'Bills & Utilities': ['electricity', 'water', 'bill', 'recharge', 'kplc', 'nairobi water', 'token'],
-      'Entertainment': ['netflix', 'movie', 'spotify', 'showmax', 'dstv', 'gotv'],
+      'Investments': [
+        'ziidi',
+        'invested',
+        'investment',
+        'mmf',
+      ],
+      'Food & Dining': [
+        'swiggy',
+        'zomato',
+        'restaurant',
+        'food',
+        'cafe',
+        'hotel',
+        'eatery',
+      ],
+      'Shopping': [
+        'amazon',
+        'flipkart',
+        'shopping',
+        'mall',
+        'supermarket',
+        'shop',
+        'store',
+      ],
+      'Transportation': [
+        'uber',
+        'ola',
+        'petrol',
+        'fuel',
+        'matatu',
+        'boda',
+        'taxi',
+        'transport',
+      ],
+      'Bills & Utilities': [
+        'electricity',
+        'water',
+        'bill',
+        'recharge',
+        'kplc',
+        'nairobi water',
+        'token',
+      ],
+      'Entertainment': [
+        'netflix',
+        'movie',
+        'spotify',
+        'showmax',
+        'dstv',
+        'gotv',
+      ],
       'Airtime & Data': ['airtime', 'data', 'bundle', 'safaricom', 'airtel'],
       'Mobile Money': ['m-pesa', 'mpesa', 'agent'],
-      'Loans': ['fuliza', 'loan', 'borrow', 'repay'],
+      'Interest & Fees': ['fuliza interest', 'fuliza fee', 'overdraft charge'],
       'Salary': ['salary', 'wages', 'payment received'],
     };
 
@@ -202,5 +366,81 @@ class SmsParserDataSource {
       }
     }
     return 'Other';
+  }
+
+  double _extractTransactionFee(String body) {
+    // M-Pesa fee patterns - multiple variations
+    final feePatterns = [
+      RegExp(r'transaction cost[,:]?\s*ksh\.?\s*([\d,]+\.?\d*)', caseSensitive: false),
+      RegExp(r'access fee charged\s*ksh\.?\s*([\d,]+\.?\d*)', caseSensitive: false),
+      RegExp(r'transaction fee[,:]?\s*ksh\.?\s*([\d,]+\.?\d*)', caseSensitive: false),
+    ];
+    
+    for (var pattern in feePatterns) {
+      final match = pattern.firstMatch(body);
+      if (match != null) {
+        final feeStr = match.group(1)!.replaceAll(',', '');
+        final fee = double.tryParse(feeStr) ?? 0.0;
+        developer.log('Extracted fee: $fee from: ${body.substring(0, body.length > 100 ? 100 : body.length)}');
+        return fee;
+      }
+    }
+    
+    return 0.0;
+  }
+
+  Map<String, dynamic> _extractBalanceInfo(String body) {
+    final lowerBody = body.toLowerCase();
+    
+    // M-Pesa balance: "New M-PESA balance is Ksh152.95"
+    final mpesaBalanceRegex = RegExp(
+      r'(?:new )?m-pesa balance is ksh\s*([\d,]+\.?\d*)',
+      caseSensitive: false,
+    );
+    final mpesaMatch = mpesaBalanceRegex.firstMatch(body);
+    final mpesaBalance = mpesaMatch != null
+        ? double.tryParse(mpesaMatch.group(1)!.replaceAll(',', ''))
+        : null;
+
+    // Fuliza balance: "Total Fuliza M-Pesa outstanding amount is Ksh336.50 due on 12/02/26"
+    final fulizaBalanceRegex = RegExp(
+      r'(?:total )?fuliza.*?outstanding.*?ksh\s*([\d,]+\.?\d*)',
+      caseSensitive: false,
+    );
+    final fulizaMatch = fulizaBalanceRegex.firstMatch(body);
+    final fulizaBalance = fulizaMatch != null
+        ? double.tryParse(fulizaMatch.group(1)!.replaceAll(',', ''))
+        : null;
+
+    // Fuliza due date: "due on 12/02/26"
+    final dueDateRegex = RegExp(
+      r'due on (\d{1,2})/(\d{1,2})/(\d{2})',
+      caseSensitive: false,
+    );
+    final dueDateMatch = dueDateRegex.firstMatch(body);
+    DateTime? dueDate;
+    if (dueDateMatch != null) {
+      final day = int.parse(dueDateMatch.group(1)!);
+      final month = int.parse(dueDateMatch.group(2)!);
+      final year = 2000 + int.parse(dueDateMatch.group(3)!);
+      dueDate = DateTime(year, month, day);
+    }
+
+    // Ziidi balance: "Your ZIIDI balance is Ksh. 10,075.58"
+    final ziidiBalanceRegex = RegExp(
+      r'ziidi balance is ksh\.?\s*([\d,]+\.?\d*)',
+      caseSensitive: false,
+    );
+    final ziidiMatch = ziidiBalanceRegex.firstMatch(body);
+    final ziidiBalance = ziidiMatch != null
+        ? double.tryParse(ziidiMatch.group(1)!.replaceAll(',', ''))
+        : null;
+
+    return {
+      'balance': mpesaBalance,
+      'fulizaBalance': fulizaBalance,
+      'dueDate': dueDate,
+      'ziidiBalance': ziidiBalance,
+    };
   }
 }

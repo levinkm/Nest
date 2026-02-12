@@ -14,6 +14,9 @@ class Transaction with _$Transaction {
     required String type,
     String? transactionId,
     @Default(false) bool isTransfer,
+    @Default(0.0) double fee,
+    String? accountId,
+    String? toAccountId,
   }) = _Transaction;
 
   factory Transaction.fromJson(Map<String, dynamic> json) => _$TransactionFromJson(json);

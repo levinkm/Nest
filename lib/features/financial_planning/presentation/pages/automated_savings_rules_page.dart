@@ -266,7 +266,7 @@ class _RuleBottomSheetState extends State<_RuleBottomSheet> {
           ),
           const SizedBox(height: 20),
           DropdownButtonFormField<String>(
-            value: _ruleType,
+            initialValue: _ruleType,
             decoration: const InputDecoration(
               labelText: 'Rule Type',
               border: OutlineInputBorder(),
@@ -305,7 +305,7 @@ class _RuleBottomSheetState extends State<_RuleBottomSheet> {
           if (_ruleType == 'fixed') ...[
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _frequency,
+              initialValue: _frequency,
               decoration: const InputDecoration(
                 labelText: 'Frequency',
                 border: OutlineInputBorder(),

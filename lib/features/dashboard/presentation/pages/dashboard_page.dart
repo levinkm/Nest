@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -117,11 +119,10 @@ class DashboardPage extends StatelessWidget {
                                           const SizedBox(width: 12),
                                           Expanded(
                                             child: _buildStatCard(
-                                              'Fuliza',
-                                              fulizaDebt,
+                                              'Fees',
+                                              _calculateTotalFees(transactions),
                                               AppColors.error,
-                                              Icons
-                                                  .account_balance_wallet_rounded,
+                                              Icons.receipt_rounded,
                                               currency,
                                             ),
                                           ),
@@ -176,25 +177,37 @@ class DashboardPage extends StatelessWidget {
   Future<void> _syncSms(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     final daysBack = prefs.getInt('sms_days_back') ?? 30;
-    
+
     // Clean ALL duplicates first
     final localDb = LocalDatabase();
     await localDb.removeDuplicateTransactions();
-    
+
     // Reload to show cleaned data immediately
-    context.read<TransactionBloc>().add(const TransactionEvent.loadTransactions());
-    
+    context.read<TransactionBloc>().add(
+      const TransactionEvent.loadTransactions(),
+    );
+
     // Then sync new SMS
     context.read<SmsSyncBloc>().add(SmsSyncEvent.syncSms(daysBack: daysBack));
-    
+
     // Wait for sync to complete
     await Future.delayed(const Duration(seconds: 2));
-    
+
     // Clean duplicates again after sync
     await localDb.removeDuplicateTransactions();
-    
+
     // Final reload
-    context.read<TransactionBloc>().add(const TransactionEvent.loadTransactions());
+    context.read<TransactionBloc>().add(
+      const TransactionEvent.loadTransactions(),
+    );
+  }
+
+  double _calculateTotalFees(List<dynamic> transactions) {
+    final total = transactions.fold<double>(0.0, (sum, t) => sum + t.fee);
+    developer.log(
+      'Total fees calculated: $total from ${transactions.length} transactions',
+    );
+    return total;
   }
 
   Widget _buildBalanceCard(double balance, String currency) {
@@ -508,8 +521,9 @@ class DashboardPage extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        if (value.toInt() >= last7Days.length)
+                        if (value.toInt() >= last7Days.length) {
                           return const Text('');
+                        }
                         return Text(
                           last7Days.keys.elementAt(value.toInt()).split('/')[1],
                           style: const TextStyle(

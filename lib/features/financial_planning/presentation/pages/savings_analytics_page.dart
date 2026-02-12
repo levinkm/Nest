@@ -708,8 +708,9 @@ class SavingsAnalyticsPage extends StatelessWidget {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          if (value.toInt() >= topGoals.length)
+                          if (value.toInt() >= topGoals.length) {
                             return const Text('');
+                          }
                           final goal = topGoals[value.toInt()];
                           return Padding(
                             padding: const EdgeInsets.only(top: 8),

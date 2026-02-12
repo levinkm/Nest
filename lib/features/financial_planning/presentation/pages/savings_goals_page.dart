@@ -56,7 +56,11 @@ class _SavingsGoalsPageState extends State<SavingsGoalsPage> {
     _showGoalBottomSheet(context, goal: _goals[index], index: index);
   }
 
-  void _showGoalBottomSheet(BuildContext context, {Map<String, dynamic>? goal, int? index}) {
+  void _showGoalBottomSheet(
+    BuildContext context, {
+    Map<String, dynamic>? goal,
+    int? index,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -147,9 +151,7 @@ class _SavingsGoalsPageState extends State<SavingsGoalsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Savings Goals'),
-      ),
+      appBar: AppBar(title: const Text('Savings Goals')),
       floatingActionButton: FloatingActionButton(
         onPressed: _addGoal,
         child: const Icon(Icons.add),
@@ -176,9 +178,9 @@ class _SavingsGoalsPageState extends State<SavingsGoalsPage> {
                 final current = goal['currentAmount'] ?? 0.0;
                 final target = goal['targetAmount'] ?? 1.0;
                 final progress = (current / target).clamp(0.0, 1.0);
-                final daysLeft = DateTime.parse(goal['targetDate'])
-                    .difference(DateTime.now())
-                    .inDays;
+                final daysLeft = DateTime.parse(
+                  goal['targetDate'],
+                ).difference(DateTime.now()).inDays;
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -495,7 +497,7 @@ class _GoalBottomSheetState extends State<_GoalBottomSheet> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _frequency,
+              initialValue: _frequency,
               decoration: const InputDecoration(
                 labelText: 'Frequency',
                 border: OutlineInputBorder(),
@@ -521,7 +523,8 @@ class _GoalBottomSheetState extends State<_GoalBottomSheet> {
                     'targetAmount': double.parse(_targetController.text),
                     'currentAmount': widget.goal?['currentAmount'] ?? 0.0,
                     'targetDate': _targetDate.toIso8601String(),
-                    'createdAt': widget.goal?['createdAt'] ??
+                    'createdAt':
+                        widget.goal?['createdAt'] ??
                         DateTime.now().toIso8601String(),
                     'isActive': true,
                     'isRecurring': _isRecurring,

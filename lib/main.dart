@@ -12,6 +12,7 @@ import 'features/sms_parser/domain/usecases/sync_sms_transactions.dart';
 import 'features/sms_parser/data/datasources/sms_parser_datasource.dart';
 import 'features/settings/presentation/pages/pin_setup_page.dart';
 import 'features/settings/presentation/pages/pin_login_page.dart';
+import 'features/ledger/presentation/pages/ledger_page.dart';
 import 'core/services/auth_service.dart';
 
 void main() {
@@ -51,6 +52,7 @@ class MyApp extends StatelessWidget {
           '/home': (context) => const MainNavigationPage(),
           '/setup': (context) => const PinSetupPage(),
           '/login': (context) => const PinLoginPage(),
+          '/ledger': (context) => const LedgerPage(),
         },
         onGenerateRoute: (settings) {
           if (settings.name == '/budget/analytics') {

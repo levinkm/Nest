@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../transactions/presentation/bloc/transaction_bloc.dart';
 import '../../../transactions/domain/entities/transaction.dart' as domain;
+import '../../../transactions/data/datasources/local_database.dart';
 
 class DebtManagementPage extends StatefulWidget {
   const DebtManagementPage({super.key});
@@ -26,8 +27,42 @@ class _DebtManagementPageState extends State<DebtManagementPage> {
   Future<void> _loadDebts() async {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString('debts') ?? '[]';
+    
+    // Load from SharedPreferences
+    final prefsDebts = List<Map<String, dynamic>>.from(jsonDecode(data));
+    
+    // Load from database
+    final db = LocalDatabase();
+    final dbDebts = await db.getDebts();
+    
+    print('Loading debts - SharedPrefs: ${prefsDebts.length}, Database: ${dbDebts.length}');
+    
+    // Combine both sources
+    final allDebts = [...prefsDebts];
+    for (var dbDebt in dbDebts) {
+      print('DB Debt: ${dbDebt['name']} - ${dbDebt['principal']}');
+      if (!allDebts.any((d) => d['id'] == dbDebt['id'])) {
+        allDebts.add({
+          'id': dbDebt['id'],
+          'name': dbDebt['name'],
+          'creditor': 'M-Pesa',
+          'originalAmount': dbDebt['principal'],
+          'remainingAmount': dbDebt['principal'],
+          'totalPaid': 0.0,
+          'interestRate': dbDebt['interestRate'] ?? 0.0,
+          'interestPeriod': dbDebt['interestType'] ?? 'daily',
+          'remainingMonths': 1,
+          'payments': [],
+          'isActive': dbDebt['isActive'] == 1,
+          'dueDate': dbDebt['dueDate'],
+        });
+      }
+    }
+    
+    print('Total debts loaded: ${allDebts.length}');
+    
     setState(() {
-      _debts = List<Map<String, dynamic>>.from(jsonDecode(data));
+      _debts = allDebts;
     });
   }
 
@@ -65,7 +100,7 @@ class _DebtManagementPageState extends State<DebtManagementPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Debt Manager',
@@ -75,6 +110,14 @@ class _DebtManagementPageState extends State<DebtManagementPage> {
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.refresh,
+              color: AppColors.textSecondary,
+              size: 24,
+            ),
+            onPressed: _loadDebts,
+          ),
           IconButton(
             icon: const Icon(
               Icons.add_circle_rounded,
@@ -668,7 +711,7 @@ class _DebtBottomSheetState extends State<DebtBottomSheet> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: interestPeriod,
+                  initialValue: interestPeriod,
                   dropdownColor: AppColors.surfaceLight,
                   style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(
@@ -746,8 +789,9 @@ class _DebtBottomSheetState extends State<DebtBottomSheet> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (nameController.text.isEmpty ||
-                          amountController.text.isEmpty)
+                          amountController.text.isEmpty) {
                         return;
+                      }
                       final debt = {
                         'id': widget.debt?['id'] ?? const Uuid().v4(),
                         'name': nameController.text,
@@ -895,7 +939,7 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: channel,
+                initialValue: channel,
                 dropdownColor: AppColors.surfaceLight,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(

@@ -3,6 +3,8 @@ import '../../core/theme/app_colors.dart';
 import '../../features/financial_planning/presentation/pages/financial_planning_page.dart';
 import '../../features/debt_management/presentation/pages/debt_management_page.dart';
 import '../../features/transactions/presentation/pages/settings_page.dart';
+import '../../features/ledger/presentation/pages/ledger_page.dart';
+import '../../features/analytics/presentation/pages/analytics_dashboard_page.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -14,10 +16,7 @@ class MorePage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
         title: const Text(
           'More',
           style: TextStyle(
@@ -29,6 +28,28 @@ class MorePage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _buildMenuItem(
+            context,
+            icon: Icons.analytics_rounded,
+            title: 'Analytics Dashboard',
+            subtitle: 'Insights & spending patterns',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AnalyticsDashboardPage()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildMenuItem(
+            context,
+            icon: Icons.account_balance_rounded,
+            title: 'M-Pesa Ledger',
+            subtitle: 'View & export account ledger',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LedgerPage()),
+            ),
+          ),
+          const SizedBox(height: 12),
           _buildMenuItem(
             context,
             icon: Icons.analytics_rounded,

@@ -12,23 +12,24 @@ class TransactionClassifier {
   }
 
   Future<Map<String, String>> classify(String smsBody) async {
-    if (_rules == null) {
-      _rules = ClassificationRules.getDefaults();
-    }
+    _rules ??= ClassificationRules.getDefaults();
     return _classifyWithRules(smsBody, _rules!);
   }
 
-  Map<String, String> _classifyWithRules(String body, ClassificationRules rules) {
+  Map<String, String> _classifyWithRules(
+    String body,
+    ClassificationRules rules,
+  ) {
     final lowerBody = body.toLowerCase();
-    
+
     // Check for failures
     if (rules.failureKeywords.any((kw) => lowerBody.contains(kw))) {
       return {'type': 'skip', 'category': 'Other'};
     }
-    
+
     // Determine type
     String type = 'expense'; // default
-    
+
     // Check income keywords
     for (var keywords in rules.incomeKeywords.values) {
       if (keywords.any((kw) => lowerBody.contains(kw))) {
@@ -36,7 +37,7 @@ class TransactionClassifier {
         break;
       }
     }
-    
+
     // Check transfer keywords
     for (var keywords in rules.transferKeywords.values) {
       if (keywords.any((kw) => lowerBody.contains(kw))) {
@@ -44,7 +45,7 @@ class TransactionClassifier {
         break;
       }
     }
-    
+
     // If not income or transfer, check expense keywords
     if (type == 'expense') {
       for (var keywords in rules.expenseKeywords.values) {
@@ -54,7 +55,7 @@ class TransactionClassifier {
         }
       }
     }
-    
+
     // Determine category
     String category = 'Other';
     for (var entry in rules.categoryKeywords.entries) {
@@ -63,11 +64,11 @@ class TransactionClassifier {
         break;
       }
     }
-    
+
     if (type == 'transfer') {
       category = 'Transfer';
     }
-    
+
     return {'type': type, 'category': category};
   }
 

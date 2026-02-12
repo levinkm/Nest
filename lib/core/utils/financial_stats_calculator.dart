@@ -1,4 +1,5 @@
 import '../../features/transactions/domain/entities/transaction.dart' as domain;
+import '../../features/transactions/data/datasources/local_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -33,7 +34,6 @@ class FinancialStatsCalculator {
 
     for (var t in transactions) {
       if (t.isTransfer) {
-        // Transfers don't affect net balance
         totalTransfers += t.amount;
         continue;
       }
@@ -45,9 +45,10 @@ class FinancialStatsCalculator {
         totalExpense += t.amount;
         expenseByCategory[t.category] = (expenseByCategory[t.category] ?? 0) + t.amount;
       }
+      // debt and debt_payment don't affect income/expense
     }
 
-    // Get actual debt from debt management
+    // Get debt from debt table + Fuliza from account balance
     final totalDebt = await _getTotalDebt();
     final netBalance = totalIncome - totalExpense;
 
@@ -63,51 +64,26 @@ class FinancialStatsCalculator {
   }
 
   static Future<double> _getTotalDebt() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getString('debts') ?? '[]';
-    final debts = List<Map<String, dynamic>>.from(jsonDecode(data));
-    return debts.where((d) => d['isActive'] == true).fold<double>(0.0, (sum, d) => sum + (d['remainingAmount'] as double));
+    // Get debts from debt table
+    final db = LocalDatabase();
+    final debts = await db.getDebts();
+    double debtTotal = debts.fold<double>(0.0, (sum, d) => sum + (d['principal'] as double));
+    
+    // Add Fuliza debt from account balance
+    final account = await db.getAccount('mpesa_default');
+    if (account != null) {
+      final balance = account['balance'] ?? 0.0;
+      if (balance < 0) {
+        debtTotal += balance.abs();
+      }
+    }
+    
+    return debtTotal;
   }
 
   static double calculateFulizaDebt(List<domain.Transaction> transactions) {
-    // Get the most recent Fuliza transaction to extract outstanding balance
-    final fulizaTransactions = transactions.where((t) => 
-      t.description.toLowerCase().contains('fuliza')
-    ).toList();
-
-    print('Found ${fulizaTransactions.length} Fuliza transactions');
-
-    if (fulizaTransactions.isEmpty) return 0.0;
-
-    // Sort by date descending to get most recent
-    fulizaTransactions.sort((a, b) => b.date.compareTo(a.date));
-    
-    // Check most recent transaction for outstanding balance
-    final mostRecent = fulizaTransactions.first.description;
-    print('Most recent Fuliza transaction: $mostRecent');
-    
-    final mostRecentLower = mostRecent.toLowerCase();
-    
-    // Extract outstanding balance from messages like:
-    // "Total Fuliza M-Pesa outstanding amount is Ksh336.50"
-    // "outstanding Fuliza M-PESA balance is Ksh100.00"
-    // "partially pay your outstanding F uliza M-PESA balance of Ksh100.00"
-    final patterns = [
-      RegExp(r'outstanding amount is ksh?\s*([\d,]+\.?\d*)', caseSensitive: false),
-      RegExp(r'outstanding.*?(?:is|of).*?ksh?\s*([\d,]+\.?\d*)', caseSensitive: false),
-    ];
-    
-    for (final pattern in patterns) {
-      final match = pattern.firstMatch(mostRecentLower);
-      if (match != null) {
-        final balanceStr = match.group(1)?.replaceAll(',', '') ?? '0';
-        final balance = double.tryParse(balanceStr) ?? 0.0;
-        print('Extracted Fuliza balance: $balance from pattern: ${pattern.pattern}');
-        return balance;
-      }
-    }
-
-    print('No Fuliza balance pattern matched');
+    // Fuliza debt is tracked in account balance (negative balance)
+    // This method kept for backward compatibility
     return 0.0;
   }
 

@@ -15,6 +15,14 @@ _$SmsTransactionImpl _$$SmsTransactionImplFromJson(Map<String, dynamic> json) =>
       type: json['type'] as String,
       transactionId: json['transactionId'] as String?,
       isTransfer: json['isTransfer'] as bool? ?? false,
+      fee: (json['fee'] as num?)?.toDouble() ?? 0.0,
+      recordedBalance: (json['recordedBalance'] as num?)?.toDouble(),
+      fulizaBalance: (json['fulizaBalance'] as num?)?.toDouble(),
+      fulizaDueDate: json['fulizaDueDate'] == null
+          ? null
+          : DateTime.parse(json['fulizaDueDate'] as String),
+      ziidiBalance: (json['ziidiBalance'] as num?)?.toDouble(),
+      counterparty: json['counterparty'] as String?,
     );
 
 Map<String, dynamic> _$$SmsTransactionImplToJson(
@@ -27,4 +35,10 @@ Map<String, dynamic> _$$SmsTransactionImplToJson(
   'type': instance.type,
   'transactionId': instance.transactionId,
   'isTransfer': instance.isTransfer,
+  'fee': instance.fee,
+  'recordedBalance': instance.recordedBalance,
+  'fulizaBalance': instance.fulizaBalance,
+  'fulizaDueDate': instance.fulizaDueDate?.toIso8601String(),
+  'ziidiBalance': instance.ziidiBalance,
+  'counterparty': instance.counterparty,
 };

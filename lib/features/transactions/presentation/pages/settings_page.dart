@@ -80,8 +80,14 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildCurrencyTile() {
     return ListTile(
       leading: const Icon(Icons.attach_money, color: AppColors.textPrimary),
-      title: const Text('Default Currency', style: TextStyle(color: AppColors.textPrimary)),
-      subtitle: Text(_currency, style: const TextStyle(color: AppColors.textSecondary)),
+      title: const Text(
+        'Default Currency',
+        style: TextStyle(color: AppColors.textPrimary),
+      ),
+      subtitle: Text(
+        _currency,
+        style: const TextStyle(color: AppColors.textSecondary),
+      ),
       trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
       onTap: () => _showCurrencyPicker(),
     );
@@ -90,8 +96,14 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildSmsDaysBackTile() {
     return ListTile(
       leading: const Icon(Icons.calendar_today, color: AppColors.textPrimary),
-      title: const Text('SMS Days Back', style: TextStyle(color: AppColors.textPrimary)),
-      subtitle: Text('$_smsDaysBack days', style: const TextStyle(color: AppColors.textSecondary)),
+      title: const Text(
+        'SMS Days Back',
+        style: TextStyle(color: AppColors.textPrimary),
+      ),
+      subtitle: Text(
+        '$_smsDaysBack days',
+        style: const TextStyle(color: AppColors.textSecondary),
+      ),
       trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
       onTap: () => _showSmsDaysBackPicker(),
     );
@@ -100,7 +112,10 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildThemeModeTile() {
     return ListTile(
       leading: const Icon(Icons.palette, color: AppColors.textPrimary),
-      title: const Text('Theme Mode', style: TextStyle(color: AppColors.textPrimary)),
+      title: const Text(
+        'Theme Mode',
+        style: TextStyle(color: AppColors.textPrimary),
+      ),
       subtitle: Text(
         _themeMode == 'light'
             ? 'Light'
@@ -117,8 +132,14 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildAutoSyncTile() {
     return SwitchListTile(
       secondary: const Icon(Icons.sync, color: AppColors.textPrimary),
-      title: const Text('Auto-sync on Launch', style: TextStyle(color: AppColors.textPrimary)),
-      subtitle: const Text('Sync SMS when app opens', style: TextStyle(color: AppColors.textSecondary)),
+      title: const Text(
+        'Auto-sync on Launch',
+        style: TextStyle(color: AppColors.textPrimary),
+      ),
+      subtitle: const Text(
+        'Sync SMS when app opens',
+        style: TextStyle(color: AppColors.textSecondary),
+      ),
       value: _autoSync,
       onChanged: (val) async {
         setState(() => _autoSync = val);
@@ -130,9 +151,18 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildBudgetLimitsTile() {
     return ListTile(
-      leading: const Icon(Icons.account_balance_wallet, color: AppColors.textPrimary),
-      title: const Text('Budget Limits', style: TextStyle(color: AppColors.textPrimary)),
-      subtitle: const Text('Set spending limits', style: TextStyle(color: AppColors.textSecondary)),
+      leading: const Icon(
+        Icons.account_balance_wallet,
+        color: AppColors.textPrimary,
+      ),
+      title: const Text(
+        'Budget Limits',
+        style: TextStyle(color: AppColors.textPrimary),
+      ),
+      subtitle: const Text(
+        'Set spending limits',
+        style: TextStyle(color: AppColors.textSecondary),
+      ),
       trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
       onTap: () => Navigator.push(
         context,
@@ -162,7 +192,10 @@ class _SettingsPageState extends State<SettingsPage> {
     return ListTile(
       leading: const Icon(Icons.info, color: AppColors.textPrimary),
       title: Text(title, style: const TextStyle(color: AppColors.textPrimary)),
-      trailing: Text(value, style: const TextStyle(color: AppColors.textSecondary)),
+      trailing: Text(
+        value,
+        style: const TextStyle(color: AppColors.textSecondary),
+      ),
     );
   }
 
@@ -325,15 +358,17 @@ class _SettingsPageState extends State<SettingsPage> {
               Navigator.pop(context);
               try {
                 await BackupService.shareBackup('csv');
-                if (mounted)
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('CSV backup shared')),
                   );
+                }
               } catch (e) {
-                if (mounted)
+                if (mounted) {
                   ScaffoldMessenger.of(
                     context,
                   ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                }
               }
             },
             child: const Text('CSV'),
@@ -343,15 +378,17 @@ class _SettingsPageState extends State<SettingsPage> {
               Navigator.pop(context);
               try {
                 await BackupService.shareBackup('json');
-                if (mounted)
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('JSON backup shared')),
                   );
+                }
               } catch (e) {
-                if (mounted)
+                if (mounted) {
                   ScaffoldMessenger.of(
                     context,
                   ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                }
               }
             },
             child: const Text('JSON'),
@@ -549,13 +586,21 @@ class _BudgetLimitsPageState extends State<BudgetLimitsPage> {
         child: const Icon(Icons.add),
       ),
       body: _budgets.isEmpty
-          ? const Center(child: Text('No budget limits set', style: TextStyle(color: AppColors.textSecondary)))
+          ? const Center(
+              child: Text(
+                'No budget limits set',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            )
           : ListView.builder(
               itemCount: _budgets.length,
               itemBuilder: (context, index) {
                 final entry = _budgets.entries.elementAt(index);
                 return ListTile(
-                  title: Text(entry.key, style: const TextStyle(color: AppColors.textPrimary)),
+                  title: Text(
+                    entry.key,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                  ),
                   subtitle: Text(
                     '$_currency ${entry.value.toStringAsFixed(0)}',
                     style: const TextStyle(color: AppColors.textSecondary),
@@ -709,12 +754,20 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
         child: const Icon(Icons.add),
       ),
       body: _categories.isEmpty
-          ? const Center(child: Text('No custom categories', style: TextStyle(color: AppColors.textSecondary)))
+          ? const Center(
+              child: Text(
+                'No custom categories',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            )
           : ListView.builder(
               itemCount: _categories.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                  title: Text(_categories[index], style: const TextStyle(color: AppColors.textPrimary)),
+                  title: Text(
+                    _categories[index],
+                    style: const TextStyle(color: AppColors.textPrimary),
+                  ),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: AppColors.error),
                     onPressed: () {

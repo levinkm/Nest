@@ -4,7 +4,7 @@ import '../data/models/budget_model.dart';
 class AnalyticsScreen extends StatelessWidget {
   final Budget budget;
 
-  const AnalyticsScreen({Key? key, required this.budget}) : super(key: key);
+  const AnalyticsScreen({super.key, required this.budget});
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +43,10 @@ class AnalyticsScreen extends StatelessWidget {
                     const Text('Spent', style: TextStyle(color: Colors.grey)),
                     Text(
                       '\$${budget.spent.toStringAsFixed(2)}',
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -53,7 +56,10 @@ class AnalyticsScreen extends StatelessWidget {
                     const Text('Limit', style: TextStyle(color: Colors.grey)),
                     Text(
                       '\$${budget.limit.toStringAsFixed(2)}',
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -67,8 +73,12 @@ class AnalyticsScreen extends StatelessWidget {
 
   Widget _buildProgressCard() {
     final progress = budget.percentage / 100;
-    final color = budget.isOverBudget ? Colors.red : progress >= 0.8 ? Colors.orange : Colors.green;
-    
+    final color = budget.isOverBudget
+        ? Colors.red
+        : progress >= 0.8
+        ? Colors.orange
+        : Colors.green;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),

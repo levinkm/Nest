@@ -28,6 +28,12 @@ mixin _$SmsTransaction {
   String get type => throw _privateConstructorUsedError;
   String? get transactionId => throw _privateConstructorUsedError;
   bool get isTransfer => throw _privateConstructorUsedError;
+  double get fee => throw _privateConstructorUsedError;
+  double? get recordedBalance => throw _privateConstructorUsedError;
+  double? get fulizaBalance => throw _privateConstructorUsedError;
+  DateTime? get fulizaDueDate => throw _privateConstructorUsedError;
+  double? get ziidiBalance => throw _privateConstructorUsedError;
+  String? get counterparty => throw _privateConstructorUsedError;
 
   /// Serializes this SmsTransaction to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -54,6 +60,12 @@ abstract class $SmsTransactionCopyWith<$Res> {
     String type,
     String? transactionId,
     bool isTransfer,
+    double fee,
+    double? recordedBalance,
+    double? fulizaBalance,
+    DateTime? fulizaDueDate,
+    double? ziidiBalance,
+    String? counterparty,
   });
 }
 
@@ -79,6 +91,12 @@ class _$SmsTransactionCopyWithImpl<$Res, $Val extends SmsTransaction>
     Object? type = null,
     Object? transactionId = freezed,
     Object? isTransfer = null,
+    Object? fee = null,
+    Object? recordedBalance = freezed,
+    Object? fulizaBalance = freezed,
+    Object? fulizaDueDate = freezed,
+    Object? ziidiBalance = freezed,
+    Object? counterparty = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -110,6 +128,30 @@ class _$SmsTransactionCopyWithImpl<$Res, $Val extends SmsTransaction>
                 ? _value.isTransfer
                 : isTransfer // ignore: cast_nullable_to_non_nullable
                       as bool,
+            fee: null == fee
+                ? _value.fee
+                : fee // ignore: cast_nullable_to_non_nullable
+                      as double,
+            recordedBalance: freezed == recordedBalance
+                ? _value.recordedBalance
+                : recordedBalance // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            fulizaBalance: freezed == fulizaBalance
+                ? _value.fulizaBalance
+                : fulizaBalance // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            fulizaDueDate: freezed == fulizaDueDate
+                ? _value.fulizaDueDate
+                : fulizaDueDate // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            ziidiBalance: freezed == ziidiBalance
+                ? _value.ziidiBalance
+                : ziidiBalance // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            counterparty: freezed == counterparty
+                ? _value.counterparty
+                : counterparty // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -133,6 +175,12 @@ abstract class _$$SmsTransactionImplCopyWith<$Res>
     String type,
     String? transactionId,
     bool isTransfer,
+    double fee,
+    double? recordedBalance,
+    double? fulizaBalance,
+    DateTime? fulizaDueDate,
+    double? ziidiBalance,
+    String? counterparty,
   });
 }
 
@@ -157,6 +205,12 @@ class __$$SmsTransactionImplCopyWithImpl<$Res>
     Object? type = null,
     Object? transactionId = freezed,
     Object? isTransfer = null,
+    Object? fee = null,
+    Object? recordedBalance = freezed,
+    Object? fulizaBalance = freezed,
+    Object? fulizaDueDate = freezed,
+    Object? ziidiBalance = freezed,
+    Object? counterparty = freezed,
   }) {
     return _then(
       _$SmsTransactionImpl(
@@ -188,6 +242,30 @@ class __$$SmsTransactionImplCopyWithImpl<$Res>
             ? _value.isTransfer
             : isTransfer // ignore: cast_nullable_to_non_nullable
                   as bool,
+        fee: null == fee
+            ? _value.fee
+            : fee // ignore: cast_nullable_to_non_nullable
+                  as double,
+        recordedBalance: freezed == recordedBalance
+            ? _value.recordedBalance
+            : recordedBalance // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        fulizaBalance: freezed == fulizaBalance
+            ? _value.fulizaBalance
+            : fulizaBalance // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        fulizaDueDate: freezed == fulizaDueDate
+            ? _value.fulizaDueDate
+            : fulizaDueDate // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        ziidiBalance: freezed == ziidiBalance
+            ? _value.ziidiBalance
+            : ziidiBalance // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        counterparty: freezed == counterparty
+            ? _value.counterparty
+            : counterparty // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -204,6 +282,12 @@ class _$SmsTransactionImpl implements _SmsTransaction {
     required this.type,
     this.transactionId,
     this.isTransfer = false,
+    this.fee = 0.0,
+    this.recordedBalance,
+    this.fulizaBalance,
+    this.fulizaDueDate,
+    this.ziidiBalance,
+    this.counterparty,
   });
 
   factory _$SmsTransactionImpl.fromJson(Map<String, dynamic> json) =>
@@ -224,10 +308,23 @@ class _$SmsTransactionImpl implements _SmsTransaction {
   @override
   @JsonKey()
   final bool isTransfer;
+  @override
+  @JsonKey()
+  final double fee;
+  @override
+  final double? recordedBalance;
+  @override
+  final double? fulizaBalance;
+  @override
+  final DateTime? fulizaDueDate;
+  @override
+  final double? ziidiBalance;
+  @override
+  final String? counterparty;
 
   @override
   String toString() {
-    return 'SmsTransaction(amount: $amount, category: $category, description: $description, date: $date, type: $type, transactionId: $transactionId, isTransfer: $isTransfer)';
+    return 'SmsTransaction(amount: $amount, category: $category, description: $description, date: $date, type: $type, transactionId: $transactionId, isTransfer: $isTransfer, fee: $fee, recordedBalance: $recordedBalance, fulizaBalance: $fulizaBalance, fulizaDueDate: $fulizaDueDate, ziidiBalance: $ziidiBalance, counterparty: $counterparty)';
   }
 
   @override
@@ -245,7 +342,18 @@ class _$SmsTransactionImpl implements _SmsTransaction {
             (identical(other.transactionId, transactionId) ||
                 other.transactionId == transactionId) &&
             (identical(other.isTransfer, isTransfer) ||
-                other.isTransfer == isTransfer));
+                other.isTransfer == isTransfer) &&
+            (identical(other.fee, fee) || other.fee == fee) &&
+            (identical(other.recordedBalance, recordedBalance) ||
+                other.recordedBalance == recordedBalance) &&
+            (identical(other.fulizaBalance, fulizaBalance) ||
+                other.fulizaBalance == fulizaBalance) &&
+            (identical(other.fulizaDueDate, fulizaDueDate) ||
+                other.fulizaDueDate == fulizaDueDate) &&
+            (identical(other.ziidiBalance, ziidiBalance) ||
+                other.ziidiBalance == ziidiBalance) &&
+            (identical(other.counterparty, counterparty) ||
+                other.counterparty == counterparty));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -259,6 +367,12 @@ class _$SmsTransactionImpl implements _SmsTransaction {
     type,
     transactionId,
     isTransfer,
+    fee,
+    recordedBalance,
+    fulizaBalance,
+    fulizaDueDate,
+    ziidiBalance,
+    counterparty,
   );
 
   /// Create a copy of SmsTransaction
@@ -287,6 +401,12 @@ abstract class _SmsTransaction implements SmsTransaction {
     required final String type,
     final String? transactionId,
     final bool isTransfer,
+    final double fee,
+    final double? recordedBalance,
+    final double? fulizaBalance,
+    final DateTime? fulizaDueDate,
+    final double? ziidiBalance,
+    final String? counterparty,
   }) = _$SmsTransactionImpl;
 
   factory _SmsTransaction.fromJson(Map<String, dynamic> json) =
@@ -306,6 +426,18 @@ abstract class _SmsTransaction implements SmsTransaction {
   String? get transactionId;
   @override
   bool get isTransfer;
+  @override
+  double get fee;
+  @override
+  double? get recordedBalance;
+  @override
+  double? get fulizaBalance;
+  @override
+  DateTime? get fulizaDueDate;
+  @override
+  double? get ziidiBalance;
+  @override
+  String? get counterparty;
 
   /// Create a copy of SmsTransaction
   /// with the given fields replaced by the non-null parameter values.

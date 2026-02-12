@@ -16,6 +16,9 @@ _$TransactionImpl _$$TransactionImplFromJson(Map<String, dynamic> json) =>
       type: json['type'] as String,
       transactionId: json['transactionId'] as String?,
       isTransfer: json['isTransfer'] as bool? ?? false,
+      fee: (json['fee'] as num?)?.toDouble() ?? 0.0,
+      accountId: json['accountId'] as String?,
+      toAccountId: json['toAccountId'] as String?,
     );
 
 Map<String, dynamic> _$$TransactionImplToJson(_$TransactionImpl instance) =>
@@ -28,4 +31,7 @@ Map<String, dynamic> _$$TransactionImplToJson(_$TransactionImpl instance) =>
       'type': instance.type,
       'transactionId': instance.transactionId,
       'isTransfer': instance.isTransfer,
+      'fee': instance.fee,
+      'accountId': instance.accountId,
+      'toAccountId': instance.toAccountId,
     };

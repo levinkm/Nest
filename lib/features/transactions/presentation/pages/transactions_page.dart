@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../bloc/transaction_bloc.dart';
 import '../../domain/entities/transaction.dart';
-import '../../../sms_parser/presentation/bloc/sms_sync_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class TransactionsPage extends StatelessWidget {
@@ -320,7 +318,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: category,
+                  initialValue: category,
                   dropdownColor: AppColors.surfaceLight,
                   style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(

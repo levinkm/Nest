@@ -13,6 +13,12 @@ class SmsTransaction with _$SmsTransaction {
     required String type,
     String? transactionId,
     @Default(false) bool isTransfer,
+    @Default(0.0) double fee,
+    double? recordedBalance,
+    double? fulizaBalance,
+    DateTime? fulizaDueDate,
+    double? ziidiBalance,
+    String? counterparty,
   }) = _SmsTransaction;
 
   factory SmsTransaction.fromJson(Map<String, dynamic> json) => _$SmsTransactionFromJson(json);

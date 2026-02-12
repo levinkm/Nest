@@ -24,4 +24,7 @@ class AppColors {
   // Card colors
   static const cardGradientStart = Color(0xFF1E1E1E);
   static const cardGradientEnd = Color(0xFF2D2D2D);
+  
+  // Border color
+  static const border = Color(0xFF2A2A2A);
 }
