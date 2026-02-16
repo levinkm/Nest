@@ -73,6 +73,14 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   local_auth: ^2.3.0
   crypto: ^3.0.3
+  csv: ^6.0.0
+  syncfusion_flutter_pdf: ^24.1.41
+  receive_sharing_intent: ^1.8.0
+  firebase_core: ^3.8.1
+  firebase_remote_config: ^5.1.8
+  connectivity_plus: ^6.1.2
+  google_ml_kit: ^0.18.0
+  tflite_flutter: ^0.10.4
 
 dev_dependencies:
   flutter_test:

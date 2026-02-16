@@ -3,13 +3,18 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:nest/features/bills/presentation/pages/bills_page.dart';
+import 'package:nest/features/transactions/presentation/pages/transactions_page.dart';
+import 'package:nest/features/transactions/presentation/pages/import_transactions_page.dart';
 import '../../../transactions/presentation/bloc/transaction_bloc.dart';
+import '../../../ledger/presentation/pages/ledger_page.dart';
 import '../../../../core/utils/financial_stats_calculator.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../sms_parser/presentation/bloc/sms_sync_bloc.dart';
 import '../../../../core/utils/currency_helper.dart';
 import '../../../transactions/data/datasources/local_database.dart';
+import '../../../bills/presentation/widgets/bill_suggestions_dialog.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -66,13 +71,30 @@ class DashboardPage extends StatelessWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        'Dashboard',
-                                        style: TextStyle(
-                                          color: AppColors.textPrimary,
-                                          fontSize: 28,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Text(
+                                            'Dashboard',
+                                            style: TextStyle(
+                                              color: AppColors.textPrimary,
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.add_circle_rounded,
+                                              color: AppColors.primary,
+                                              size: 28,
+                                            ),
+                                            onPressed: () =>
+                                                _showAddTransactionDialog(
+                                                  context,
+                                                ),
+                                          ),
+                                        ],
                                       ),
                                       const SizedBox(height: 24),
                                       _buildBalanceCard(
@@ -135,18 +157,10 @@ class DashboardPage extends StatelessWidget {
                                       //   currency,
                                       // ),
                                       const SizedBox(height: 16),
-                                      _buildSpendingTrendChart(
+                                      _buildUpcomingBillsWidget(),
+                                      const SizedBox(height: 16),
+                                      _buildRecentTransactions(
                                         transactions,
-                                        currency,
-                                      ),
-                                      const SizedBox(height: 16),
-                                      _buildCategoryPieChart(
-                                        stats.expenseByCategory,
-                                        currency,
-                                      ),
-                                      const SizedBox(height: 16),
-                                      _buildCategoryBreakdown(
-                                        stats.expenseByCategory,
                                         currency,
                                       ),
                                     ],
@@ -174,32 +188,55 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
+  void _showAddTransactionDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AddTransactionBottomSheet(
+        onImportTap: () {
+          Navigator.pop(context);
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => const ImportTransactionsBottomSheet(),
+          ).then((imported) {
+            if (imported != null && context.mounted) {
+              context.read<TransactionBloc>().add(
+                const TransactionEvent.loadTransactions(),
+              );
+            }
+          });
+        },
+      ),
+    );
+  }
+
   Future<void> _syncSms(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     final daysBack = prefs.getInt('sms_days_back') ?? 30;
 
-    // Clean ALL duplicates first
     final localDb = LocalDatabase();
     await localDb.removeDuplicateTransactions();
 
-    // Reload to show cleaned data immediately
     context.read<TransactionBloc>().add(
       const TransactionEvent.loadTransactions(),
     );
-
-    // Then sync new SMS
     context.read<SmsSyncBloc>().add(SmsSyncEvent.syncSms(daysBack: daysBack));
 
-    // Wait for sync to complete
     await Future.delayed(const Duration(seconds: 2));
-
-    // Clean duplicates again after sync
     await localDb.removeDuplicateTransactions();
 
-    // Final reload
     context.read<TransactionBloc>().add(
       const TransactionEvent.loadTransactions(),
     );
+
+    // Show bill suggestions after sync
+    final transactions = await localDb.getTransactions();
+    if (context.mounted) {
+      BillSuggestionsDialog.show(context, transactions);
+    }
   }
 
   double _calculateTotalFees(List<dynamic> transactions) {
@@ -210,8 +247,98 @@ class DashboardPage extends StatelessWidget {
     return total;
   }
 
+  Widget _buildUpcomingBillsWidget() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _getUpcomingBills(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
+
+        final data = snapshot.data!;
+        final upcomingCount = data['upcomingCount'] ?? 0;
+        final totalAmount = data['totalUpcoming'] ?? 0.0;
+
+        if (upcomingCount == 0) return const SizedBox.shrink();
+
+        return GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const BillsPage()),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.receipt_long,
+                    color: AppColors.warning,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$upcomingCount Bills Due Soon',
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Total: KSh ${totalAmount.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> _getUpcomingBills() async {
+    final db = LocalDatabase();
+    final bills = await db.getBills();
+    final now = DateTime.now();
+    final next7Days = now.add(const Duration(days: 7));
+
+    int upcomingCount = 0;
+    double totalUpcoming = 0.0;
+
+    for (var bill in bills) {
+      if (bill['status'] == 'paid') continue;
+      final dueDate = DateTime.parse(bill['dueDate']);
+      if (dueDate.isAfter(now) && dueDate.isBefore(next7Days)) {
+        upcomingCount++;
+        totalUpcoming += bill['amount'] as double;
+      }
+    }
+
+    return {'upcomingCount': upcomingCount, 'totalUpcoming': totalUpcoming};
+  }
+
   Widget _buildBalanceCard(double balance, String currency) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -278,6 +405,115 @@ class DashboardPage extends StatelessWidget {
               color: AppColors.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentTransactions(List<dynamic> transactions, String currency) {
+    final recent = transactions.take(5).toList();
+    if (recent.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Recent Transactions',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Builder(
+                builder: (context) => GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LedgerPage()),
+                  ),
+                  child: const Text(
+                    'View More',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...recent.map(
+            (t) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: t.type == 'income'
+                          ? AppColors.income.withOpacity(0.2)
+                          : AppColors.expense.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      t.type == 'income'
+                          ? Icons.arrow_downward
+                          : Icons.arrow_upward,
+                      color: t.type == 'income'
+                          ? AppColors.income
+                          : AppColors.expense,
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          t.description,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '${t.date.day}/${t.date.month}/${t.date.year}',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    '${t.type == 'income' ? '+' : '-'}$currency ${t.amount.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      color: t.type == 'income'
+                          ? AppColors.income
+                          : AppColors.expense,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

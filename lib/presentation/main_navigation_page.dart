@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../features/dashboard/presentation/pages/dashboard_page.dart';
-import '../features/transactions/presentation/pages/transactions_page.dart';
+import '../features/analytics/presentation/pages/analytics_dashboard_page.dart';
 import '../features/budget/presentation/pages/budget_page.dart';
 import 'more_page.dart';
 
@@ -17,7 +17,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   final List<Widget> _pages = [
     const DashboardPage(),
-    const TransactionsPage(),
+    const AnalyticsDashboardPage(),
     const BudgetPage(),
     const MorePage(),
   ];
@@ -45,7 +45,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(Icons.home_rounded, 'Home', 0),
-                _buildNavItem(Icons.receipt_long_rounded, 'Activity', 1),
+                _buildNavItem(Icons.analytics_rounded, 'Analytics', 1),
                 _buildNavItem(Icons.account_balance_wallet_rounded, 'Budget', 2),
                 _buildNavItem(Icons.more_horiz_rounded, 'More', 3),
               ],

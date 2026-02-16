@@ -5,6 +5,10 @@ import '../../features/debt_management/presentation/pages/debt_management_page.d
 import '../../features/transactions/presentation/pages/settings_page.dart';
 import '../../features/ledger/presentation/pages/ledger_page.dart';
 import '../../features/analytics/presentation/pages/analytics_dashboard_page.dart';
+import '../../features/bills/presentation/pages/bills_page.dart';
+import '../../features/bills/presentation/pages/financial_insights_page.dart';
+import '../../features/transactions/presentation/pages/recurring_income_page.dart';
+import '../../features/planning/presentation/pages/planning_page.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -28,6 +32,8 @@ class MorePage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const Text('Analytics', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
           _buildMenuItem(
             context,
             icon: Icons.analytics_rounded,
@@ -49,15 +55,52 @@ class MorePage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const LedgerPage()),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 24),
+          const Text('Financial Planning', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
           _buildMenuItem(
             context,
-            icon: Icons.analytics_rounded,
+            icon: Icons.savings_rounded,
             title: 'Financial Planning',
             subtitle: 'Goals, savings & projections',
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const FinancialPlanningPage()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildMenuItem(
+            context,
+            icon: Icons.checklist_rounded,
+            title: 'Planning & Goals',
+            subtitle: 'Track goals with estimated costs',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PlanningPage()),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text('Income & Expenses', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          _buildMenuItem(
+            context,
+            icon: Icons.attach_money_rounded,
+            title: 'Recurring Income',
+            subtitle: 'Track salary & regular income',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const RecurringIncomePage()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildMenuItem(
+            context,
+            icon: Icons.receipt_long_rounded,
+            title: 'Bill Tracker',
+            subtitle: 'Manage bills & payments',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const BillsPage()),
             ),
           ),
           const SizedBox(height: 12),
@@ -71,7 +114,22 @@ class MorePage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const DebtManagementPage()),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 24),
+          const Text('Insights', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          _buildMenuItem(
+            context,
+            icon: Icons.lightbulb_rounded,
+            title: 'Financial Insights',
+            subtitle: 'Affordability & predictions',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FinancialInsightsPage()),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text('Settings', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
           _buildMenuItem(
             context,
             icon: Icons.settings_rounded,

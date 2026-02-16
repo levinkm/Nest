@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../transactions/data/datasources/local_database.dart';
 import '../../../accounts/data/services/account_aggregation_service.dart';
@@ -22,6 +23,7 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
   List _failed = [];
   List _international = [];
   Map<String, dynamic> _p2p = {};
+  List<dynamic> _transactions = [];
 
   @override
   void initState() {
@@ -53,6 +55,7 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
       _failed = failed;
       _international = international;
       _p2p = p2p;
+      _transactions = transactions;
       _loading = false;
     });
   }
@@ -74,9 +77,15 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
                 children: [
                   _buildAggregationCard(),
                   const SizedBox(height: 16),
-                  _buildDailyLimitCard(),
-                  const SizedBox(height: 16),
                   _buildTopMerchantsCard(),
+                  const SizedBox(height: 16),
+                  _buildSpendingTrendChart(),
+                  const SizedBox(height: 16),
+                  _buildCategoryPieChart(),
+                  const SizedBox(height: 16),
+                  _buildCategoryBreakdown(),
+                  const SizedBox(height: 16),
+                  _buildDailyLimitCard(),
                   const SizedBox(height: 16),
                   _buildRecurringPaymentsCard(),
                   const SizedBox(height: 16),
@@ -90,6 +99,258 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildSpendingTrendChart() {
+    final last7Days = <String, double>{};
+    final now = DateTime.now();
+
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final key = '${date.month}/${date.day}';
+      last7Days[key] = 0.0;
+    }
+
+    for (var t in _transactions) {
+      final date = t.date;
+      if (date.isAfter(now.subtract(const Duration(days: 7))) &&
+          t.type == 'expense') {
+        final key = '${date.month}/${date.day}';
+        if (last7Days.containsKey(key)) {
+          last7Days[key] = last7Days[key]! + t.amount;
+        }
+      }
+    }
+
+    final maxY = last7Days.values.isEmpty
+        ? 100.0
+        : last7Days.values.reduce((a, b) => a > b ? a : b) * 1.2;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '7-Day Spending Trend',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 150,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(show: true, drawVerticalLine: false),
+                titlesData: FlTitlesData(
+                  leftTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        if (value.toInt() >= last7Days.length) {
+                          return const Text('');
+                        }
+                        return Text(
+                          last7Days.keys.elementAt(value.toInt()).split('/')[1],
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 10,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                minY: 0,
+                maxY: maxY,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: last7Days.values
+                        .toList()
+                        .asMap()
+                        .entries
+                        .map((e) => FlSpot(e.key.toDouble(), e.value))
+                        .toList(),
+                    isCurved: true,
+                    color: AppColors.expense,
+                    barWidth: 3,
+                    dotData: const FlDotData(show: true),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: AppColors.expense.withOpacity(0.1),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryPieChart() {
+    final categories = <String, double>{};
+    for (var t in _transactions) {
+      if (t.type == 'expense') {
+        categories[t.category] = (categories[t.category] ?? 0) + t.amount;
+      }
+    }
+
+    if (categories.isEmpty) return const SizedBox.shrink();
+
+    final sorted = categories.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final top5 = sorted.take(5).toList();
+    final total = top5.fold(0.0, (sum, e) => sum + e.value);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Expense Distribution',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 180,
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 2,
+                centerSpaceRadius: 40,
+                sections: top5.asMap().entries.map((entry) {
+                  final colors = [
+                    Colors.blue,
+                    Colors.red,
+                    Colors.green,
+                    Colors.orange,
+                    Colors.purple,
+                  ];
+                  final percent = (entry.value.value / total * 100);
+                  return PieChartSectionData(
+                    value: entry.value.value,
+                    title: '${percent.toStringAsFixed(0)}%',
+                    color: colors[entry.key % colors.length],
+                    radius: 50,
+                    titleStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryBreakdown() {
+    final categories = <String, double>{};
+    for (var t in _transactions) {
+      if (t.type == 'expense') {
+        categories[t.category] = (categories[t.category] ?? 0) + t.amount;
+      }
+    }
+
+    if (categories.isEmpty) return const SizedBox.shrink();
+
+    final sorted = categories.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final top5 = sorted.take(5).toList();
+    final total = categories.values.fold(0.0, (sum, val) => sum + val);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Top Categories',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...top5.map((entry) {
+            final percentage = (entry.value / total * 100);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        entry.key,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'KSh ${entry.value.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: percentage / 100,
+                      backgroundColor: AppColors.surfaceLight,
+                      color: AppColors.primary,
+                      minHeight: 6,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 

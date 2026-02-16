@@ -11,7 +11,7 @@ class BudgetDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(budget.category),
+        title: Text(budget.category ?? budget.name),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),

@@ -139,7 +139,39 @@ class SyncSmsTransactionsUseCase {
       }
     }
 
+    // Run bill detection and auto-matching
+    await _runBillDetection(db);
+
     return addedCount;
+  }
+
+  Future<void> _runBillDetection(LocalDatabase db) async {
+    try {
+      final bills = await db.getBills();
+      final transactions = await db.getTransactions();
+
+      for (var billData in bills) {
+        if (billData['status'] == 'paid') continue;
+
+        final dueDate = DateTime.parse(billData['dueDate']);
+        final amount = billData['amount'];
+        final merchant = billData['merchant'];
+
+        for (var txn in transactions) {
+          final daysDiff = txn.date.difference(dueDate).inDays.abs();
+          final amountMatch = (txn.amount - amount).abs() < 1.0;
+          final merchantMatch = merchant != null && txn.toAccountId == merchant;
+
+          if (daysDiff <= 3 && amountMatch && merchantMatch) {
+            await db.markBillAsPaid(billData['id'], txn.id, txn.date);
+            developer.log('Auto-matched bill: ${billData['name']}');
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      developer.log('Bill detection error: $e');
+    }
   }
 
   Future<void> _processFulizaMessages(List<Map<String, dynamic>> messages, LocalDatabase db) async {

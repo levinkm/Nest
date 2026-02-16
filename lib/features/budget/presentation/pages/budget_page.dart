@@ -31,7 +31,7 @@ class _BudgetPageState extends State<BudgetPage> {
   Future<void> _loadBudgets() async {
     _currency = await CurrencyHelper.getCurrency();
     final db = LocalDatabase();
-    final list = await db.getBudgets();
+    final list = await db.getBudgets(activeOnly: true);
     setState(() => _budgets = list);
   }
 
@@ -51,7 +51,7 @@ class _BudgetPageState extends State<BudgetPage> {
             final isExpense = t.type.toLowerCase() == 'expense';
             final matchesCategory =
                 t.category.trim().toLowerCase() ==
-                budget.category.trim().toLowerCase();
+                budget.category!.trim().toLowerCase();
             return isInPeriod && isExpense && matchesCategory;
           });
 
@@ -61,15 +61,7 @@ class _BudgetPageState extends State<BudgetPage> {
           );
 
           if (totalSpent != budget.spent) {
-            _budgets[i] = Budget(
-              id: budget.id,
-              category: budget.category,
-              limit: budget.limit,
-              spent: totalSpent,
-              period: budget.period,
-              startDate: budget.startDate,
-              endDate: budget.endDate,
-            );
+            _budgets[i] = budget.copyWith(spent: totalSpent);
             hasChanges = true;
           }
         }
@@ -314,12 +306,7 @@ class _BudgetPageState extends State<BudgetPage> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => BudgetDetailsScreen(budget: budget),
-            ),
-          ),
+          onTap: () => _showBudgetDetails(budget),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -333,7 +320,7 @@ class _BudgetPageState extends State<BudgetPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            budget.category,
+                            budget.category ?? budget.name,
                             style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 18,
@@ -466,6 +453,110 @@ class _BudgetPageState extends State<BudgetPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showBudgetDetails(Budget budget) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    budget.category ?? budget.name,
+                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppColors.cardGradientStart, AppColors.cardGradientEnd],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          Text('$_currency ${budget.spent.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textPrimary, fontSize: 36, fontWeight: FontWeight.bold)),
+                          Text('of $_currency ${budget.limit.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 16)),
+                          const SizedBox(height: 16),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value: (budget.percentage / 100).clamp(0.0, 1.0),
+                              backgroundColor: AppColors.surfaceLight,
+                              color: budget.isOverBudget ? AppColors.error : AppColors.success,
+                              minHeight: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildDetailRow('Period', budget.period),
+                    _buildDetailRow('Days Left', '${budget.daysLeft} days'),
+                    _buildDetailRow('Daily Budget', '$_currency ${budget.dailyBudget.toStringAsFixed(0)}'),
+                    _buildDetailRow('Remaining', '$_currency ${budget.remaining.toStringAsFixed(0)}'),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _updateSpent(budget);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Update Spent', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+          Text(value, style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }
@@ -650,8 +741,9 @@ class _AddBudgetBottomSheetState extends State<_AddBudgetBottomSheet> {
                       widget.onSave(
                         Budget(
                           id: const Uuid().v4(),
+                          name: _categoryController.text,
                           category: _categoryController.text,
-                          limit: double.parse(_limitController.text),
+                          amount: double.parse(_limitController.text),
                           spent: 0,
                           period: _period,
                           startDate: now,
@@ -765,14 +857,8 @@ class _UpdateSpentBottomSheetState extends State<_UpdateSpentBottomSheet> {
               child: ElevatedButton(
                 onPressed: () {
                   widget.onUpdate(
-                    Budget(
-                      id: widget.budget.id,
-                      category: widget.budget.category,
-                      limit: widget.budget.limit,
+                    widget.budget.copyWith(
                       spent: double.parse(_controller.text),
-                      period: widget.budget.period,
-                      startDate: widget.budget.startDate,
-                      endDate: widget.budget.endDate,
                     ),
                   );
                   Navigator.pop(context);

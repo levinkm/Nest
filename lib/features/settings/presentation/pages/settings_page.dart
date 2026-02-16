@@ -5,6 +5,10 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_helper.dart';
+import '../../../bills/presentation/pages/bills_page.dart';
+import '../../../bills/presentation/pages/financial_insights_page.dart';
+import '../../../transactions/presentation/pages/recurring_income_page.dart';
+import '../../../planning/presentation/pages/planning_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -78,6 +82,23 @@ class _SettingsPageState extends State<SettingsPage> {
           _buildSection('Category Management', [
             _buildTile('Manage Categories', Icons.category, () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryManagementPage()));
+            }),
+          ]),
+          _buildSection('Bills & Payments', [
+            _buildTile('Recurring Income', Icons.attach_money, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const RecurringIncomePage()));
+            }),
+            _buildTile('Bill Tracker', Icons.receipt_long, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const BillsPage()));
+            }),
+            _buildTile('Financial Insights', Icons.lightbulb, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const FinancialInsightsPage()));
+            }),
+            _buildTile('Debt Manager', Icons.credit_card, () {
+              Navigator.pushNamed(context, '/debt-manager');
+            }),
+            _buildTile('Planning & Goals', Icons.checklist, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const PlanningPage()));
             }),
           ]),
           _buildSection('Data & Backup', [

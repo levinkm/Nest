@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import '../bloc/transaction_bloc.dart';
 import '../../domain/entities/transaction.dart';
+import 'import_transactions_page.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class TransactionsPage extends StatelessWidget {
@@ -28,13 +29,38 @@ class TransactionsPage extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.add_circle_rounded,
-                      color: AppColors.primary,
-                      size: 28,
-                    ),
-                    onPressed: () => _showAddDialog(context),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.file_upload_outlined,
+                          color: AppColors.textSecondary,
+                          size: 24,
+                        ),
+                        onPressed: () async {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => const ImportTransactionsBottomSheet(),
+                          ).then((imported) {
+                            if (imported != null && context.mounted) {
+                              context.read<TransactionBloc>().add(
+                                const TransactionEvent.loadTransactions(),
+                              );
+                            }
+                          });
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.add_circle_rounded,
+                          color: AppColors.primary,
+                          size: 28,
+                        ),
+                        onPressed: () => _showAddDialog(context),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -148,13 +174,31 @@ class TransactionsPage extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const AddTransactionBottomSheet(),
+      builder: (context) => AddTransactionBottomSheet(
+        onImportTap: () {
+          Navigator.pop(context);
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => const ImportTransactionsBottomSheet(),
+          ).then((imported) {
+            if (imported != null && context.mounted) {
+              context.read<TransactionBloc>().add(
+                const TransactionEvent.loadTransactions(),
+              );
+            }
+          });
+        },
+      ),
     );
   }
 }
 
 class AddTransactionBottomSheet extends StatefulWidget {
-  const AddTransactionBottomSheet({super.key});
+  final VoidCallback? onImportTap;
+  
+  const AddTransactionBottomSheet({super.key, this.onImportTap});
 
   @override
   State<AddTransactionBottomSheet> createState() =>
@@ -204,6 +248,21 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                     color: AppColors.textPrimary,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: widget.onImportTap,
+                  icon: const Icon(Icons.file_upload_outlined, size: 18),
+                  label: const Text('Import from CSV/PDF'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
