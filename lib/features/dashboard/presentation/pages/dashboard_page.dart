@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:nest/features/bills/presentation/pages/bills_page.dart';
@@ -28,8 +29,14 @@ class DashboardPage extends StatelessWidget {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          body: SafeArea(
-            child: BlocBuilder<TransactionBloc, TransactionState>(
+          extendBodyBehindAppBar: false,
+          body: AnnotatedRegion<SystemUiOverlayStyle>(
+            value: const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.light,
+            ),
+            child: SafeArea(
+              child: BlocBuilder<TransactionBloc, TransactionState>(
               builder: (context, state) {
                 return state.when(
                   initial: () => Center(
@@ -64,6 +71,41 @@ class DashboardPage extends StatelessWidget {
                           color: AppColors.primary,
                           child: CustomScrollView(
                             slivers: [
+                              SliverAppBar(
+                                pinned: true,
+                                backgroundColor: AppColors.background,
+                                elevation: 0,
+                                toolbarHeight: 80,
+                                automaticallyImplyLeading: false,
+                                flexibleSpace: Padding(
+                                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Dashboard',
+                                        style: TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.add_circle_rounded,
+                                          color: AppColors.primary,
+                                          size: 28,
+                                        ),
+                                        onPressed: () =>
+                                            _showAddTransactionDialog(
+                                              context,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                               SliverToBoxAdapter(
                                 child: Padding(
                                   padding: const EdgeInsets.all(20),
@@ -71,32 +113,6 @@ class DashboardPage extends StatelessWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text(
-                                            'Dashboard',
-                                            style: TextStyle(
-                                              color: AppColors.textPrimary,
-                                              fontSize: 28,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.add_circle_rounded,
-                                              color: AppColors.primary,
-                                              size: 28,
-                                            ),
-                                            onPressed: () =>
-                                                _showAddTransactionDialog(
-                                                  context,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 24),
                                       _buildBalanceCard(
                                         stats.netBalance,
                                         currency,
@@ -181,6 +197,7 @@ class DashboardPage extends StatelessWidget {
                   ),
                 );
               },
+            ),
             ),
           ),
         );

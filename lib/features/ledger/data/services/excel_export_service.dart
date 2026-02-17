@@ -40,10 +40,10 @@ class ExcelExportService {
         entry.reference ?? '',
         '"${entry.description.replaceAll('"', '""')}"',
         entry.category ?? '',
-        entry.debit > 0 ? currencyFormat.format(entry.debit) : '',
-        entry.credit > 0 ? currencyFormat.format(entry.credit) : '',
-        entry.fee > 0 ? currencyFormat.format(entry.fee) : '',
-        currencyFormat.format(entry.balance),
+        entry.debit > 0 ? '"${entry.debit.toStringAsFixed(2)}"' : '',
+        entry.credit > 0 ? '"${entry.credit.toStringAsFixed(2)}"' : '',
+        entry.fee > 0 ? '"${entry.fee.toStringAsFixed(2)}"' : '',
+        '"${entry.balance.toStringAsFixed(2)}"',
       ].join(','));
     }
 
@@ -85,10 +85,10 @@ class ExcelExportService {
           ledgerEntry.reference ?? '',
           '"${ledgerEntry.description.replaceAll('"', '""')}"',
           ledgerEntry.category ?? '',
-          ledgerEntry.debit > 0 ? currencyFormat.format(ledgerEntry.debit) : '',
-          ledgerEntry.credit > 0 ? currencyFormat.format(ledgerEntry.credit) : '',
-          ledgerEntry.fee > 0 ? currencyFormat.format(ledgerEntry.fee) : '',
-          currencyFormat.format(ledgerEntry.balance),
+          ledgerEntry.debit > 0 ? '"${ledgerEntry.debit.toStringAsFixed(2)}"' : '',
+          ledgerEntry.credit > 0 ? '"${ledgerEntry.credit.toStringAsFixed(2)}"' : '',
+          ledgerEntry.fee > 0 ? '"${ledgerEntry.fee.toStringAsFixed(2)}"' : '',
+          '"${ledgerEntry.balance.toStringAsFixed(2)}"',
         ].join(','));
       }
       

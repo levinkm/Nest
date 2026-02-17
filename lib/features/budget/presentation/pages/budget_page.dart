@@ -44,10 +44,31 @@ class _BudgetPageState extends State<BudgetPage> {
         bool hasChanges = false;
         for (var i = 0; i < _budgets.length; i++) {
           final budget = _budgets[i];
+          
+          // Get current month/period start date
+          final now = DateTime.now();
+          DateTime periodStart;
+          DateTime periodEnd;
+          
+          if (budget.period == 'Monthly') {
+            periodStart = DateTime(now.year, now.month, 1);
+            periodEnd = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+          } else if (budget.period == 'Weekly') {
+            final weekday = now.weekday;
+            periodStart = now.subtract(Duration(days: weekday - 1));
+            periodEnd = periodStart.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+          } else if (budget.period == 'Daily') {
+            periodStart = DateTime(now.year, now.month, now.day);
+            periodEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
+          } else {
+            periodStart = DateTime(now.year, 1, 1);
+            periodEnd = DateTime(now.year, 12, 31, 23, 59, 59);
+          }
+          
           final categoryTransactions = transactions.where((t) {
             final isInPeriod =
-                !t.date.isBefore(budget.startDate) &&
-                !t.date.isAfter(budget.endDate);
+                t.date.isAfter(periodStart.subtract(const Duration(seconds: 1))) &&
+                t.date.isBefore(periodEnd.add(const Duration(seconds: 1)));
             final isExpense = t.type.toLowerCase() == 'expense';
             final matchesCategory =
                 t.category.trim().toLowerCase() ==

@@ -1,5 +1,6 @@
 import 'dart:math';
 import '../../features/transactions/domain/entities/transaction.dart';
+import '../constants/app_constants.dart';
 
 class MLCategorizationService {
   static final MLCategorizationService _instance = MLCategorizationService._();
@@ -8,15 +9,58 @@ class MLCategorizationService {
 
   // Simple keyword-based ML model (can be replaced with TFLite model)
   final Map<String, List<String>> _categoryKeywords = {
-    'Groceries': ['supermarket', 'naivas', 'carrefour', 'quickmart', 'shop'],
-    'Transport': ['uber', 'bolt', 'matatu', 'taxi', 'fuel', 'petrol'],
-    'Dining': ['restaurant', 'cafe', 'kfc', 'pizza', 'food'],
-    'Bills': ['electricity', 'water', 'rent', 'kplc', 'nairobi water'],
-    'Airtime & Data': ['airtime', 'bundles', 'data', 'safaricom'],
-    'Entertainment': ['cinema', 'movie', 'netflix', 'spotify'],
-    'Health': ['hospital', 'pharmacy', 'clinic', 'doctor'],
-    'Shopping': ['jumia', 'kilimall', 'amazon', 'store'],
+    'Food & Dining': ['restaurant', 'cafe', 'kfc', 'pizza', 'food', 'dining', 'eatery'],
+    'Shopping': ['supermarket', 'naivas', 'carrefour', 'quickmart', 'shop', 'jumia', 'kilimall', 'store'],
+    'Transportation': ['uber', 'bolt', 'matatu', 'taxi', 'fuel', 'petrol', 'transport'],
+    'Bills & Utilities': ['electricity', 'water', 'rent', 'kplc', 'nairobi water', 'bill', 'utility', 'paybill'],
+    'Airtime & Data': ['airtime', 'bundles', 'data', 'safaricom', 'airtel'],
+    'Entertainment': ['cinema', 'movie', 'netflix', 'spotify', 'entertainment'],
+    'Mobile Money': ['mpesa', 'm-pesa', 'send money', 'withdraw', 'agent'],
+    'Interest & Fees': ['fee', 'charge', 'interest', 'penalty'],
+    'Salary': ['salary', 'payroll', 'wages'],
+    'Transfer': ['transfer', 'sent to', 'received from'],
+    'Other': [],
   };
+
+  final List<String> _financialKeywords = [
+    'ksh', 'kes', 'paid', 'received', 'sent', 'balance', 'account',
+    'mpesa', 'm-pesa', 'transaction', 'withdraw', 'deposit', 'transfer',
+    'confirmed', 'receipt', 'charge', 'fee', 'amount', 'payment',
+    'bank', 'atm', 'paybill', 'till', 'buy goods', 'airtime',
+  ];
+
+  final List<String> _reminderKeywords = [
+    'reminder', 'due', 'upcoming', 'expires', 'renew', 'subscription',
+    'will be', 'please', 'kindly', 'remember', 'don\'t forget',
+  ];
+
+  bool isFinancialMessage(String message) {
+    final lower = message.toLowerCase();
+    
+    // Check if it's a reminder/notification
+    if (_isReminderMessage(lower)) return false;
+    
+    int matchCount = 0;
+    for (final keyword in _financialKeywords) {
+      if (lower.contains(keyword)) {
+        matchCount++;
+      }
+    }
+
+    // Consider it financial if it has 2+ financial keywords
+    return matchCount >= 2;
+  }
+
+  bool _isReminderMessage(String message) {
+    int reminderCount = 0;
+    for (final keyword in _reminderKeywords) {
+      if (message.contains(keyword)) {
+        reminderCount++;
+      }
+    }
+    // It's a reminder if it has reminder keywords but no transaction confirmation
+    return reminderCount > 0 && !message.contains('confirmed');
+  }
 
   String? categorizeTransaction(Transaction transaction) {
     final description = transaction.description.toLowerCase();

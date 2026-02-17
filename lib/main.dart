@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -23,10 +24,17 @@ import 'core/services/remote_config_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ),
   );
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await RemoteConfigService().initialize();
+
   runApp(const MyApp());
 }
 
@@ -50,11 +58,13 @@ class _MyAppState extends State<MyApp> {
 
   void _initSharedFileListener() {
     // For files shared while app is running
-    _intentDataStreamSubscription = ReceiveSharingIntent.instance.getMediaStream().listen((files) {
-      if (files.isNotEmpty) {
-        _handleSharedFiles(files);
-      }
-    });
+    _intentDataStreamSubscription = ReceiveSharingIntent.instance
+        .getMediaStream()
+        .listen((files) {
+          if (files.isNotEmpty) {
+            _handleSharedFiles(files);
+          }
+        });
 
     // For files shared while app was closed
     ReceiveSharingIntent.instance.getInitialMedia().then((files) {
@@ -67,7 +77,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> _handleSharedFiles(List<SharedMediaFile> files) async {
     for (final file in files) {
       final result = await _sharedFileHandler.handleSharedFile(file);
-      
+
       if (result.requiresPassword) {
         _showPasswordDialog(result.filePath!);
       } else if (result.success) {
@@ -87,7 +97,10 @@ class _MyAppState extends State<MyApp> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1C1C1E),
-        title: const Text('PDF Password', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'PDF Password',
+          style: TextStyle(color: Colors.white),
+        ),
         content: TextField(
           controller: passwordController,
           obscureText: true,
@@ -140,12 +153,9 @@ class _MyAppState extends State<MyApp> {
     final context = _navigatorKey.currentContext;
     if (context == null) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(error),
-        backgroundColor: Colors.red,
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(error), backgroundColor: Colors.red));
   }
 
   @override
