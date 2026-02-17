@@ -3,7 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/debug/debug_menu_page.dart';
 import '../../features/financial_planning/presentation/pages/financial_planning_page.dart';
 import '../../features/debt_management/presentation/pages/debt_management_page.dart';
-import '../../features/transactions/presentation/pages/settings_page.dart';
+import '../features/settings/presentation/pages/settings_page.dart';
 import '../../features/ledger/presentation/pages/ledger_page.dart';
 import '../../features/analytics/presentation/pages/analytics_dashboard_page.dart';
 import '../../features/bills/presentation/pages/bills_page.dart';

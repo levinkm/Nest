@@ -3,13 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../../transactions/presentation/pages/classification_rules_page.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_helper.dart';
-import '../../../../core/debug/debug_menu_page.dart';
-import '../../../bills/presentation/pages/bills_page.dart';
-import '../../../bills/presentation/pages/financial_insights_page.dart';
-import '../../../transactions/presentation/pages/recurring_income_page.dart';
-import '../../../planning/presentation/pages/planning_page.dart';
+import '../../../../core/services/backup_service.dart';
+import '../../../notifications/presentation/pages/notification_settings_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -23,9 +22,6 @@ class _SettingsPageState extends State<SettingsPage> {
   int _smsDaysBack = 30;
   String _themeMode = 'system';
   bool _autoSync = true;
-  bool _budgetAlerts = true;
-  bool _savingsAlerts = true;
-  bool _debtReminders = true;
 
   @override
   void initState() {
@@ -40,109 +36,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _smsDaysBack = prefs.getInt('sms_days_back') ?? 30;
       _themeMode = prefs.getString('theme_mode') ?? 'system';
       _autoSync = prefs.getBool('auto_sync') ?? true;
-      _budgetAlerts = prefs.getBool('budget_alerts') ?? true;
-      _savingsAlerts = prefs.getBool('savings_alerts') ?? true;
-      _debtReminders = prefs.getBool('debt_reminders') ?? true;
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
-        children: [
-          _buildSection('Financial Settings', [
-            _buildCurrencyTile(),
-            _buildBudgetLimitsTile(),
-          ]),
-          _buildSection('SMS & Sync', [
-            _buildSmsDaysBackTile(),
-            _buildAutoSyncTile(),
-          ]),
-          _buildSection('Appearance', [_buildThemeModeTile()]),
-          _buildSection('Notifications', [
-            _buildSwitchTile('Budget Alerts', _budgetAlerts, (val) async {
-              setState(() => _budgetAlerts = val);
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('budget_alerts', val);
-            }),
-            _buildSwitchTile('Savings Milestones', _savingsAlerts, (val) async {
-              setState(() => _savingsAlerts = val);
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('savings_alerts', val);
-            }),
-            _buildSwitchTile('Debt Reminders', _debtReminders, (val) async {
-              setState(() => _debtReminders = val);
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('debt_reminders', val);
-            }),
-          ]),
-          _buildSection('Category Management', [
-            _buildTile('Manage Categories', Icons.category, () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const CategoryManagementPage(),
-                ),
-              );
-            }),
-          ]),
-          _buildSection('Bills & Payments', [
-            _buildTile('Recurring Income', Icons.attach_money, () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const RecurringIncomePage()),
-              );
-            }),
-            _buildTile('Bill Tracker', Icons.receipt_long, () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const BillsPage()),
-              );
-            }),
-            _buildTile('Financial Insights', Icons.lightbulb, () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const FinancialInsightsPage(),
-                ),
-              );
-            }),
-            _buildTile('Debt Manager', Icons.credit_card, () {
-              Navigator.pushNamed(context, '/debt-manager');
-            }),
-            _buildTile('Planning & Goals', Icons.checklist, () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PlanningPage()),
-              );
-            }),
-          ]),
-          _buildSection('Data & Backup', [
-            _buildTile('Export Data', Icons.download, () => _exportData()),
-            _buildTile('Backup Data', Icons.backup, () => _backupData()),
-            _buildTile('Restore Data', Icons.restore, () => _restoreData()),
-          ]),
-          _buildSection('Security', [
-            _buildTile(
-              'Biometric Lock',
-              Icons.fingerprint,
-              () => _setupBiometric(),
-            ),
-          ]),
-          _buildSection('About', [
-            _buildInfoTile('Version', '1.0.0'),
-            _buildTile('Debug Menu', Icons.developer_mode, () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const DebugMenuPage()),
-              );
-            }),
-          ]),
-        ],
-      ),
-    );
   }
 
   Widget _buildSection(String title, List<Widget> children) {
@@ -168,45 +62,67 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildCurrencyTile() {
     return ListTile(
-      leading: const Icon(Icons.attach_money),
-      title: const Text('Default Currency'),
-      subtitle: Text(_currency),
-      trailing: const Icon(Icons.chevron_right),
+      leading: const Icon(Icons.attach_money, color: AppColors.textPrimary),
+      title: const Text(
+        'Default Currency',
+        style: TextStyle(color: AppColors.textPrimary),
+      ),
+      subtitle: Text(
+        _currency,
+        style: const TextStyle(color: AppColors.textSecondary),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
       onTap: () => _showCurrencyPicker(),
     );
   }
 
   Widget _buildSmsDaysBackTile() {
     return ListTile(
-      leading: const Icon(Icons.calendar_today),
-      title: const Text('SMS Days Back'),
-      subtitle: Text('$_smsDaysBack days'),
-      trailing: const Icon(Icons.chevron_right),
+      leading: const Icon(Icons.calendar_today, color: AppColors.textPrimary),
+      title: const Text(
+        'SMS Days Back',
+        style: TextStyle(color: AppColors.textPrimary),
+      ),
+      subtitle: Text(
+        '$_smsDaysBack days',
+        style: const TextStyle(color: AppColors.textSecondary),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
       onTap: () => _showSmsDaysBackPicker(),
     );
   }
 
   Widget _buildThemeModeTile() {
     return ListTile(
-      leading: const Icon(Icons.palette),
-      title: const Text('Theme Mode'),
+      leading: const Icon(Icons.palette, color: AppColors.textPrimary),
+      title: const Text(
+        'Theme Mode',
+        style: TextStyle(color: AppColors.textPrimary),
+      ),
       subtitle: Text(
         _themeMode == 'light'
             ? 'Light'
             : _themeMode == 'dark'
             ? 'Dark'
             : 'System',
+        style: const TextStyle(color: AppColors.textSecondary),
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
       onTap: () => _showThemeModePicker(),
     );
   }
 
   Widget _buildAutoSyncTile() {
     return SwitchListTile(
-      secondary: const Icon(Icons.sync),
-      title: const Text('Auto-sync on Launch'),
-      subtitle: const Text('Sync SMS when app opens'),
+      secondary: const Icon(Icons.sync, color: AppColors.textPrimary),
+      title: const Text(
+        'Auto-sync on Launch',
+        style: TextStyle(color: AppColors.textPrimary),
+      ),
+      subtitle: const Text(
+        'Sync SMS when app opens',
+        style: TextStyle(color: AppColors.textSecondary),
+      ),
       value: _autoSync,
       onChanged: (val) async {
         setState(() => _autoSync = val);
@@ -218,10 +134,19 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildBudgetLimitsTile() {
     return ListTile(
-      leading: const Icon(Icons.account_balance_wallet),
-      title: const Text('Budget Limits'),
-      subtitle: const Text('Set spending limits'),
-      trailing: const Icon(Icons.chevron_right),
+      leading: const Icon(
+        Icons.account_balance_wallet,
+        color: AppColors.textPrimary,
+      ),
+      title: const Text(
+        'Budget Limits',
+        style: TextStyle(color: AppColors.textPrimary),
+      ),
+      subtitle: const Text(
+        'Set spending limits',
+        style: TextStyle(color: AppColors.textSecondary),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const BudgetLimitsPage()),
@@ -229,28 +154,23 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildSwitchTile(String title, bool value, Function(bool) onChanged) {
-    return SwitchListTile(
-      title: Text(title),
-      value: value,
-      onChanged: onChanged,
-    );
-  }
-
   Widget _buildTile(String title, IconData icon, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
+      leading: Icon(icon, color: AppColors.textPrimary),
+      title: Text(title, style: const TextStyle(color: AppColors.textPrimary)),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
       onTap: onTap,
     );
   }
 
   Widget _buildInfoTile(String title, String value) {
     return ListTile(
-      leading: const Icon(Icons.info),
-      title: Text(title),
-      trailing: Text(value),
+      leading: const Icon(Icons.info, color: AppColors.textPrimary),
+      title: Text(title, style: const TextStyle(color: AppColors.textPrimary)),
+      trailing: Text(
+        value,
+        style: const TextStyle(color: AppColors.textSecondary),
+      ),
     );
   }
 
@@ -345,36 +265,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _exportData() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final data = {
-        'transactions': prefs.getString('emergency_fund_transactions') ?? '[]',
-        'goals': prefs.getString('savings_goals') ?? '[]',
-        'incomes': prefs.getString('expected_incomes') ?? '[]',
-        'rules': prefs.getString('savings_rules') ?? '[]',
-      };
-
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File(
-        '${dir.path}/nest_export_${DateTime.now().millisecondsSinceEpoch}.json',
-      );
-      await file.writeAsString(jsonEncode(data));
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Exported to ${file.path}')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
-      }
-    }
-  }
-
   Future<void> _backupData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -403,7 +293,71 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Future<void> _cloudBackup() async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cloud Backup'),
+        content: const Text('Choose backup format'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              navigator.pop();
+              try {
+                await BackupService.shareBackup('csv');
+                if (mounted) {
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('CSV backup shared')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+                }
+              }
+            },
+            child: const Text('CSV'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              navigator.pop();
+              try {
+                await BackupService.shareBackup('json');
+                if (mounted) {
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('JSON backup shared')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+                }
+              }
+            },
+            child: const Text('JSON'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _restoreData() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json', 'csv'],
+    );
+
+    if (result == null || result.files.single.path == null) return;
+
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -415,11 +369,23 @@ class _SettingsPageState extends State<SettingsPage> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Restore feature coming soon')),
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              navigator.pop();
+              final success = await BackupService.restoreFromFile(
+                result.files.single.path!,
               );
+              if (mounted) {
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success ? 'Data restored successfully' : 'Restore failed',
+                    ),
+                  ),
+                );
+                if (success) _loadSettings();
+              }
             },
             child: const Text('Restore'),
           ),
@@ -428,18 +394,83 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _setupBiometric() async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Biometric Lock'),
-        content: const Text('Biometric authentication coming in next update.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Settings',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
           ),
-        ],
+        ),
+      ),
+      body: SafeArea(
+        child: ListView(
+          children: [
+            _buildSection('Financial Settings', [
+              _buildCurrencyTile(),
+              _buildBudgetLimitsTile(),
+            ]),
+            _buildSection('SMS & Sync', [
+              _buildSmsDaysBackTile(),
+              _buildAutoSyncTile(),
+            ]),
+            _buildSection('Appearance', [_buildThemeModeTile()]),
+            _buildSection('Notifications', [
+              _buildTile('Notification Settings', Icons.notifications, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationSettingsPage(),
+                  ),
+                );
+              }),
+            ]),
+            _buildSection('Category Management', [
+              _buildTile('Manage Categories', Icons.category, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CategoryManagementPage(),
+                  ),
+                );
+              }),
+            ]),
+            _buildSection('Classification', [
+              _buildTile('Classification Rules', Icons.rule, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ClassificationRulesPage(),
+                  ),
+                );
+              }),
+            ]),
+            _buildSection('Data & Backup', [
+              _buildTile(
+                'Cloud Backup (Share)',
+                Icons.cloud_upload,
+                () => _cloudBackup(),
+              ),
+              _buildTile(
+                'Restore from File',
+                Icons.restore,
+                () => _restoreData(),
+              ),
+              _buildTile('Local Backup', Icons.backup, () => _backupData()),
+            ]),
+            _buildSection('About', [_buildInfoTile('Version', '1.0.0')]),
+          ],
+        ),
       ),
     );
   }
@@ -477,24 +508,49 @@ class _BudgetLimitsPageState extends State<BudgetLimitsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Budget Limits')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Budget Limits',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addBudget,
+        backgroundColor: AppColors.primary,
         child: const Icon(Icons.add),
       ),
       body: _budgets.isEmpty
-          ? const Center(child: Text('No budget limits set'))
+          ? const Center(
+              child: Text(
+                'No budget limits set',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            )
           : ListView.builder(
               itemCount: _budgets.length,
               itemBuilder: (context, index) {
                 final entry = _budgets.entries.elementAt(index);
                 return ListTile(
-                  title: Text(entry.key),
+                  title: Text(
+                    entry.key,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                  ),
                   subtitle: Text(
                     '$_currency ${entry.value.toStringAsFixed(0)}',
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete),
+                    icon: const Icon(Icons.delete, color: AppColors.error),
                     onPressed: () {
                       setState(() => _budgets.remove(entry.key));
                       _saveBudgets();
@@ -620,20 +676,44 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Categories')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Manage Categories',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addCategory,
+        backgroundColor: AppColors.primary,
         child: const Icon(Icons.add),
       ),
       body: _categories.isEmpty
-          ? const Center(child: Text('No custom categories'))
+          ? const Center(
+              child: Text(
+                'No custom categories',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            )
           : ListView.builder(
               itemCount: _categories.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                  title: Text(_categories[index]),
+                  title: Text(
+                    _categories[index],
+                    style: const TextStyle(color: AppColors.textPrimary),
+                  ),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete),
+                    icon: const Icon(Icons.delete, color: AppColors.error),
                     onPressed: () {
                       setState(() => _categories.removeAt(index));
                       _saveCategories();

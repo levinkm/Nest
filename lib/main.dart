@@ -23,6 +23,7 @@ import 'features/ledger/presentation/pages/ledger_page.dart';
 import 'features/transactions/services/shared_file_handler.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/remote_config_service.dart';
+import 'features/notifications/data/services/fcm_service.dart';
 
 const smsEventsChannel = MethodChannel('com.nest.finance/sms_events');
 
@@ -55,6 +56,7 @@ void main() async {
   }
 
   await RemoteConfigService().initialize();
+  await FCMService().initialize();
 
   runApp(const MyApp());
 }
