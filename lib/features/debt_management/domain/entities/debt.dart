@@ -6,7 +6,7 @@ part 'debt.g.dart';
 @freezed
 class Debt with _$Debt {
   const Debt._();
-  
+
   const factory Debt({
     required String id,
     required String name,
@@ -20,7 +20,8 @@ class Debt with _$Debt {
   }) = _Debt;
 
   double get availableCredit => creditLimit - principal;
-  double get utilizationPercentage => creditLimit > 0 ? (principal / creditLimit) * 100 : 0;
+  double get utilizationPercentage =>
+      creditLimit > 0 ? (principal / creditLimit) * 100 : 0;
   bool get isMaxedOut => principal >= creditLimit;
 
   factory Debt.fromJson(Map<String, dynamic> json) => _$DebtFromJson(json);

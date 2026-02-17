@@ -30,16 +30,19 @@ class CategorizationRule {
     'createdAt': createdAt.toIso8601String(),
   };
 
-  factory CategorizationRule.fromJson(Map<String, dynamic> json) => CategorizationRule(
-    id: json['id'],
-    name: json['name'],
-    category: json['category'],
-    matchType: json['matchType'],
-    matchValue: json['matchValue'],
-    isActive: (json['isActive'] ?? 1) == 1,
-    priority: json['priority'] ?? 0,
-    createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
-  );
+  factory CategorizationRule.fromJson(Map<String, dynamic> json) =>
+      CategorizationRule(
+        id: json['id'],
+        name: json['name'],
+        category: json['category'],
+        matchType: json['matchType'],
+        matchValue: json['matchValue'],
+        isActive: (json['isActive'] ?? 1) == 1,
+        priority: json['priority'] ?? 0,
+        createdAt: json['createdAt'] != null
+            ? DateTime.parse(json['createdAt'])
+            : DateTime.now(),
+      );
 }
 
 class RecurringIncome {
@@ -82,7 +85,7 @@ class RecurringIncome {
   DateTime calculateNextExpected() {
     final now = DateTime.now();
     final base = lastReceived ?? now;
-    
+
     switch (frequency) {
       case 'daily':
         return base.add(const Duration(days: 1));
@@ -102,7 +105,9 @@ class RecurringIncome {
         return next;
       case 'weekly':
         var next = base.add(const Duration(days: 7));
-        while (next.weekday != dayOfWeek) next = next.add(const Duration(days: 1));
+        while (next.weekday != dayOfWeek) {
+          next = next.add(const Duration(days: 1));
+        }
         return next;
       case 'biweekly':
         return base.add(const Duration(days: 14));
@@ -119,7 +124,9 @@ class RecurringIncome {
   }
 
   bool matchesAmount(double txnAmount) {
-    if (isVariableAmount) return txnAmount >= minAmount! && txnAmount <= maxAmount!;
+    if (isVariableAmount) {
+      return txnAmount >= minAmount! && txnAmount <= maxAmount!;
+    }
     return (txnAmount - amount).abs() < 100;
   }
 
@@ -141,23 +148,30 @@ class RecurringIncome {
     'createdAt': createdAt.toIso8601String(),
   };
 
-  factory RecurringIncome.fromJson(Map<String, dynamic> json) => RecurringIncome(
-    id: json['id'],
-    name: json['name'],
-    source: json['source'],
-    amount: (json['amount'] ?? 0).toDouble(),
-    minAmount: json['minAmount']?.toDouble(),
-    maxAmount: json['maxAmount']?.toDouble(),
-    frequency: json['frequency'],
-    dayOfMonth: json['dayOfMonth'] ?? 1,
-    dayOfWeek: json['dayOfWeek'] ?? 1,
-    merchantName: json['merchantName'],
-    autoMark: (json['autoMark'] ?? 1) == 1,
-    lastReceived: json['lastReceived'] != null ? DateTime.parse(json['lastReceived']) : null,
-    nextExpected: json['nextExpected'] != null ? DateTime.parse(json['nextExpected']) : null,
-    isActive: (json['isActive'] ?? 1) == 1,
-    createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
-  );
+  factory RecurringIncome.fromJson(Map<String, dynamic> json) =>
+      RecurringIncome(
+        id: json['id'],
+        name: json['name'],
+        source: json['source'],
+        amount: (json['amount'] ?? 0).toDouble(),
+        minAmount: json['minAmount']?.toDouble(),
+        maxAmount: json['maxAmount']?.toDouble(),
+        frequency: json['frequency'],
+        dayOfMonth: json['dayOfMonth'] ?? 1,
+        dayOfWeek: json['dayOfWeek'] ?? 1,
+        merchantName: json['merchantName'],
+        autoMark: (json['autoMark'] ?? 1) == 1,
+        lastReceived: json['lastReceived'] != null
+            ? DateTime.parse(json['lastReceived'])
+            : null,
+        nextExpected: json['nextExpected'] != null
+            ? DateTime.parse(json['nextExpected'])
+            : null,
+        isActive: (json['isActive'] ?? 1) == 1,
+        createdAt: json['createdAt'] != null
+            ? DateTime.parse(json['createdAt'])
+            : DateTime.now(),
+      );
 
   RecurringIncome copyWith({
     String? id,

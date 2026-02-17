@@ -74,6 +74,7 @@ doc/api/
 .flutter-plugins
 .flutter-plugins-dependencies
 messages.sh
+TODO.md
 
 # Firebase
 firebase_options.dart

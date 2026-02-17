@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uuid/uuid.dart';
 import '../../data/models/budget_model.dart';
 import '../../services/smart_budget_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -19,7 +18,7 @@ class _EnhancedBudgetPageState extends State<EnhancedBudgetPage>
     with SingleTickerProviderStateMixin {
   List<Budget> _budgets = [];
   String _currency = 'KSh';
-  String _filter = 'All';
+  final String _filter = 'All';
   late TabController _tabController;
   final _smartService = SmartBudgetService();
   int _healthScore = 0;
@@ -172,7 +171,7 @@ class _EnhancedBudgetPageState extends State<EnhancedBudgetPage>
             Icon(
               Icons.account_balance_wallet_outlined,
               size: 80,
-              color: AppColors.textSecondary.withOpacity(0.5),
+              color: AppColors.textSecondary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -229,7 +228,7 @@ class _EnhancedBudgetPageState extends State<EnhancedBudgetPage>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withOpacity(0.2), color.withOpacity(0.1)],
+          colors: [color.withValues(alpha: 0.2), color.withValues(alpha: 0.1)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -241,7 +240,7 @@ class _EnhancedBudgetPageState extends State<EnhancedBudgetPage>
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -333,8 +332,8 @@ class _EnhancedBudgetPageState extends State<EnhancedBudgetPage>
                 ),
                 decoration: BoxDecoration(
                   color: progress >= 1.0
-                      ? AppColors.error.withOpacity(0.2)
-                      : AppColors.success.withOpacity(0.2),
+                      ? AppColors.error.withValues(alpha: 0.2)
+                      : AppColors.success.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(

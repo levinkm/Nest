@@ -6,7 +6,8 @@ class ClassificationRulesPage extends StatefulWidget {
   const ClassificationRulesPage({super.key});
 
   @override
-  State<ClassificationRulesPage> createState() => _ClassificationRulesPageState();
+  State<ClassificationRulesPage> createState() =>
+      _ClassificationRulesPageState();
 }
 
 class _ClassificationRulesPageState extends State<ClassificationRulesPage> {
@@ -122,7 +123,12 @@ class _ClassificationRulesPageState extends State<ClassificationRulesPage> {
     );
   }
 
-  Widget _buildSection(String title, String subtitle, List<String> keywords, Function(List<String>) onUpdate) {
+  Widget _buildSection(
+    String title,
+    String subtitle,
+    List<String> keywords,
+    Function(List<String>) onUpdate,
+  ) {
     return Card(
       color: AppColors.surface,
       margin: const EdgeInsets.only(bottom: 16),
@@ -150,17 +156,26 @@ class _ClassificationRulesPageState extends State<ClassificationRulesPage> {
             Wrap(
               spacing: 8,
               children: [
-                ...keywords.map((kw) => Chip(
-                  label: Text(kw, style: const TextStyle(color: AppColors.textPrimary)),
-                  backgroundColor: AppColors.surfaceLight,
-                  deleteIconColor: AppColors.error,
-                  onDeleted: () {
-                    final updated = List<String>.from(keywords)..remove(kw);
-                    onUpdate(updated);
-                  },
-                )),
+                ...keywords.map(
+                  (kw) => Chip(
+                    label: Text(
+                      kw,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                    ),
+                    backgroundColor: AppColors.surfaceLight,
+                    deleteIconColor: AppColors.error,
+                    onDeleted: () {
+                      final updated = List<String>.from(keywords)..remove(kw);
+                      onUpdate(updated);
+                    },
+                  ),
+                ),
                 ActionChip(
-                  label: const Icon(Icons.add, size: 16, color: AppColors.primary),
+                  label: const Icon(
+                    Icons.add,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
                   backgroundColor: AppColors.surfaceLight,
                   onPressed: () => _addKeyword(keywords, onUpdate),
                 ),
@@ -191,53 +206,68 @@ class _ClassificationRulesPageState extends State<ClassificationRulesPage> {
             ),
             const Text(
               'Add merchant names and keywords for each category',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 12),
-            ..._rules!.categoryKeywords.entries.map((entry) => ExpansionTile(
-              title: Text(
-                entry.key,
-                style: const TextStyle(color: AppColors.textPrimary),
-              ),
-              iconColor: AppColors.textPrimary,
-              collapsedIconColor: AppColors.textSecondary,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Wrap(
-                    spacing: 8,
-                    children: [
-                      ...entry.value.map((kw) => Chip(
-                        label: Text(kw, style: const TextStyle(color: AppColors.textPrimary)),
-                        backgroundColor: AppColors.surfaceLight,
-                        deleteIconColor: AppColors.error,
-                        onDeleted: () {
-                          final updated = Map<String, List<String>>.from(_rules!.categoryKeywords);
-                          updated[entry.key] = List<String>.from(entry.value)..remove(kw);
-                          setState(() {
-                            _rules = ClassificationRules(
-                              incomeKeywords: _rules!.incomeKeywords,
-                              expenseKeywords: _rules!.expenseKeywords,
-                              transferKeywords: _rules!.transferKeywords,
-                              failureKeywords: _rules!.failureKeywords,
-                              categoryKeywords: updated,
-                            );
-                          });
-                        },
-                      )),
-                      ActionChip(
-                        label: const Icon(Icons.add, size: 16, color: AppColors.primary),
-                        backgroundColor: AppColors.surfaceLight,
-                        onPressed: () => _addCategoryKeyword(entry.key, entry.value),
-                      ),
-                    ],
-                  ),
+            ..._rules!.categoryKeywords.entries.map(
+              (entry) => ExpansionTile(
+                title: Text(
+                  entry.key,
+                  style: const TextStyle(color: AppColors.textPrimary),
                 ),
-              ],
-            )),
+                iconColor: AppColors.textPrimary,
+                collapsedIconColor: AppColors.textSecondary,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Wrap(
+                      spacing: 8,
+                      children: [
+                        ...entry.value.map(
+                          (kw) => Chip(
+                            label: Text(
+                              kw,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            backgroundColor: AppColors.surfaceLight,
+                            deleteIconColor: AppColors.error,
+                            onDeleted: () {
+                              final updated = Map<String, List<String>>.from(
+                                _rules!.categoryKeywords,
+                              );
+                              updated[entry.key] = List<String>.from(
+                                entry.value,
+                              )..remove(kw);
+                              setState(() {
+                                _rules = ClassificationRules(
+                                  incomeKeywords: _rules!.incomeKeywords,
+                                  expenseKeywords: _rules!.expenseKeywords,
+                                  transferKeywords: _rules!.transferKeywords,
+                                  failureKeywords: _rules!.failureKeywords,
+                                  categoryKeywords: updated,
+                                );
+                              });
+                            },
+                          ),
+                        ),
+                        ActionChip(
+                          label: const Icon(
+                            Icons.add,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
+                          backgroundColor: AppColors.surfaceLight,
+                          onPressed: () =>
+                              _addCategoryKeyword(entry.key, entry.value),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -265,7 +295,10 @@ class _ClassificationRulesPageState extends State<ClassificationRulesPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -274,7 +307,10 @@ class _ClassificationRulesPageState extends State<ClassificationRulesPage> {
               }
               Navigator.pop(context);
             },
-            child: const Text('Add', style: TextStyle(color: AppColors.primary)),
+            child: const Text(
+              'Add',
+              style: TextStyle(color: AppColors.primary),
+            ),
           ),
         ],
       ),
@@ -302,12 +338,17 @@ class _ClassificationRulesPageState extends State<ClassificationRulesPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                final updated = Map<String, List<String>>.from(_rules!.categoryKeywords);
+                final updated = Map<String, List<String>>.from(
+                  _rules!.categoryKeywords,
+                );
                 updated[category] = [...current, controller.text.toLowerCase()];
                 setState(() {
                   _rules = ClassificationRules(
@@ -321,7 +362,10 @@ class _ClassificationRulesPageState extends State<ClassificationRulesPage> {
               }
               Navigator.pop(context);
             },
-            child: const Text('Add', style: TextStyle(color: AppColors.primary)),
+            child: const Text(
+              'Add',
+              style: TextStyle(color: AppColors.primary),
+            ),
           ),
         ],
       ),

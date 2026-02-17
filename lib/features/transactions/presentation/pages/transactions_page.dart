@@ -42,7 +42,8 @@ class TransactionsPage extends StatelessWidget {
                             context: context,
                             isScrollControlled: true,
                             backgroundColor: Colors.transparent,
-                            builder: (_) => const ImportTransactionsBottomSheet(),
+                            builder: (_) =>
+                                const ImportTransactionsBottomSheet(),
                           ).then((imported) {
                             if (imported != null && context.mounted) {
                               context.read<TransactionBloc>().add(
@@ -101,7 +102,7 @@ class TransactionsPage extends StatelessWidget {
                                       (t.type == 'income'
                                               ? AppColors.income
                                               : AppColors.expense)
-                                          .withOpacity(0.1),
+                                          .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
@@ -197,7 +198,7 @@ class TransactionsPage extends StatelessWidget {
 
 class AddTransactionBottomSheet extends StatefulWidget {
   final VoidCallback? onImportTap;
-  
+
   const AddTransactionBottomSheet({super.key, this.onImportTap});
 
   @override
@@ -236,7 +237,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.textSecondary.withOpacity(0.3),
+                      color: AppColors.textSecondary.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -275,7 +276,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
                             color: type == 'income'
-                                ? AppColors.income.withOpacity(0.1)
+                                ? AppColors.income.withValues(alpha: 0.1)
                                 : AppColors.surfaceLight,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
@@ -316,7 +317,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
                             color: type == 'expense'
-                                ? AppColors.expense.withOpacity(0.1)
+                                ? AppColors.expense.withValues(alpha: 0.1)
                                 : AppColors.surfaceLight,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(

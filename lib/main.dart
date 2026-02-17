@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'firebase_options.dart';
 import 'dart:async';
 import 'presentation/main_navigation_page.dart';
@@ -35,6 +37,23 @@ void main() async {
   );
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize Crashlytics only if properly configured
+  try {
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    };
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  } catch (e) {
+    // Crashlytics not configured, skip initialization
+    if (kDebugMode) {
+      print('Crashlytics not configured: $e');
+    }
+  }
+
   await RemoteConfigService().initialize();
 
   runApp(const MyApp());
@@ -64,24 +83,28 @@ class _MyAppState extends State<MyApp> {
       if (call.method == 'onSmsReceived') {
         final body = call.arguments['body'] as String?;
         final timestamp = call.arguments['timestamp'] as int?;
-        
+
         if (body != null) {
           final context = _navigatorKey.currentContext;
           if (context != null) {
             // Parse the SMS and add transaction
             final smsParser = SmsParserDataSource();
-            final date = DateTime.fromMillisecondsSinceEpoch(timestamp ?? DateTime.now().millisecondsSinceEpoch);
+            final date = DateTime.fromMillisecondsSinceEpoch(
+              timestamp ?? DateTime.now().millisecondsSinceEpoch,
+            );
             final transaction = await smsParser.parseMessage(body, date);
-            
+
             if (transaction != null) {
               // Convert SmsTransaction to Transaction
               final db = LocalDatabase();
               await db.insertTransaction(transaction.toTransaction());
-              
-              // Reload transactions to update UI
-              context.read<TransactionBloc>().add(
-                const TransactionEvent.loadTransactions(),
-              );
+
+              if (context.mounted) {
+                // Reload transactions to update UI
+                context.read<TransactionBloc>().add(
+                  const TransactionEvent.loadTransactions(),
+                );
+              }
             }
           }
         }

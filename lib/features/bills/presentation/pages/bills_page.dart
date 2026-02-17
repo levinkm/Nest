@@ -84,9 +84,9 @@ class _BillsPageState extends State<BillsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.1),
+        color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,7 +384,9 @@ class _BillsPageState extends State<BillsPage> {
                             'createdAt': DateTime.now().toIso8601String(),
                           });
 
-                          Navigator.pop(context);
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
                           _loadBills();
                         }
                       },
@@ -418,7 +420,7 @@ class _BillsPageState extends State<BillsPage> {
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
-                        value: frequency,
+                        initialValue: frequency,
                         dropdownColor: AppColors.surface,
                         style: const TextStyle(color: AppColors.textPrimary),
                         decoration: const InputDecoration(
@@ -464,7 +466,7 @@ class _BillsPageState extends State<BillsPage> {
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
-                        value: category,
+                        initialValue: category,
                         dropdownColor: AppColors.surface,
                         style: const TextStyle(color: AppColors.textPrimary),
                         decoration: const InputDecoration(
@@ -522,6 +524,18 @@ class _BillsPageState extends State<BillsPage> {
     String frequency = bill['frequency'];
     DateTime dueDate = DateTime.parse(bill['dueDate']);
     String category = bill['category'] ?? 'Bills & Utilities';
+    // Ensure category exists in dropdown list
+    final validCategories = [
+      'Bills & Utilities',
+      'Rent',
+      'Subscriptions',
+      'Loan Payment',
+      'Insurance',
+      'Other',
+    ];
+    if (!validCategories.contains(category)) {
+      category = 'Bills & Utilities';
+    }
     final merchantController = TextEditingController(
       text: bill['merchant'] ?? '',
     );
@@ -569,7 +583,9 @@ class _BillsPageState extends State<BillsPage> {
                           onPressed: () async {
                             final db = LocalDatabase();
                             await db.deleteBill(bill['id']);
-                            Navigator.pop(context);
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                            }
                             _loadBills();
                           },
                         ),
@@ -594,7 +610,9 @@ class _BillsPageState extends State<BillsPage> {
                                     : merchantController.text.trim(),
                               });
 
-                              Navigator.pop(context);
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                              }
                               _loadBills();
                             }
                           },
@@ -630,7 +648,7 @@ class _BillsPageState extends State<BillsPage> {
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
-                        value: frequency,
+                        initialValue: frequency,
                         dropdownColor: AppColors.surface,
                         style: const TextStyle(color: AppColors.textPrimary),
                         decoration: const InputDecoration(
@@ -678,7 +696,7 @@ class _BillsPageState extends State<BillsPage> {
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
-                        value: category,
+                        initialValue: category,
                         dropdownColor: AppColors.surface,
                         style: const TextStyle(color: AppColors.textPrimary),
                         decoration: const InputDecoration(
@@ -722,7 +740,7 @@ class _BillsPageState extends State<BillsPage> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.income.withOpacity(0.1),
+                            color: AppColors.income.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(

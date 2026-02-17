@@ -4,18 +4,18 @@ class AccountAggregationService {
   static Future<Map<String, dynamic>> getAggregatedBalances() async {
     final db = LocalDatabase();
     final accounts = await db.getAccounts();
-    
+
     double totalCash = 0.0;
     double totalDebt = 0.0;
     double totalInvestments = 0.0;
-    
+
     final accountBalances = <Map<String, dynamic>>[];
-    
+
     for (var account in accounts) {
       final balance = account['balance'] ?? 0.0;
       final type = account['type'] ?? '';
       final name = account['name'] ?? '';
-      
+
       if (type == 'ziidi' || name.toLowerCase().contains('ziidi')) {
         totalInvestments += balance;
       } else {
@@ -25,7 +25,7 @@ class AccountAggregationService {
           totalDebt += balance.abs();
         }
       }
-      
+
       accountBalances.add({
         'id': account['id'],
         'name': name,
@@ -34,7 +34,7 @@ class AccountAggregationService {
         'recordedBalance': account['recordedBalance'] ?? 0.0,
       });
     }
-    
+
     return {
       'totalCash': totalCash,
       'totalDebt': totalDebt,

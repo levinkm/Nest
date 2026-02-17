@@ -664,7 +664,7 @@ class _IncomeSheetState extends State<_IncomeSheet> {
                     style: TextStyle(color: AppColors.textPrimary),
                   ),
                   value: _autoMark,
-                  activeColor: AppColors.primary,
+                  activeThumbColor: AppColors.primary,
                   onChanged: (val) => setState(() => _autoMark = val),
                 ),
                 const SizedBox(height: 24),

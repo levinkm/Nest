@@ -44,18 +44,6 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
-  Future<void> _saveSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('sms_days_back', _smsDaysBack);
-    await prefs.setString('currency', _currency);
-    await CurrencyHelper.setCurrency(_currency);
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Settings saved')));
-    }
-  }
-
   Widget _buildSection(String title, List<Widget> children) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,7 +206,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setString('currency', val!);
                     await CurrencyHelper.setCurrency(val);
-                    Navigator.pop(context);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
                   },
                 ),
               )
@@ -246,7 +236,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     setState(() => _smsDaysBack = val!);
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setInt('sms_days_back', val!);
-                    Navigator.pop(context);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
                   },
                 ),
               )
@@ -274,7 +266,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     setState(() => _themeMode = val!);
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setString('theme_mode', val!);
-                    Navigator.pop(context);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
                   },
                 ),
               )
@@ -282,36 +276,6 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
     );
-  }
-
-  Future<void> _exportData() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final data = {
-        'transactions': prefs.getString('emergency_fund_transactions') ?? '[]',
-        'goals': prefs.getString('savings_goals') ?? '[]',
-        'incomes': prefs.getString('expected_incomes') ?? '[]',
-        'rules': prefs.getString('savings_rules') ?? '[]',
-      };
-
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File(
-        '${dir.path}/nest_export_${DateTime.now().millisecondsSinceEpoch}.json',
-      );
-      await file.writeAsString(jsonEncode(data));
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Exported to ${file.path}')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
-      }
-    }
   }
 
   Future<void> _backupData() async {
@@ -355,19 +319,19 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              navigator.pop();
               try {
                 await BackupService.shareBackup('csv');
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     const SnackBar(content: Text('CSV backup shared')),
                   );
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                  messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
                 }
               }
             },
@@ -375,19 +339,19 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              navigator.pop();
               try {
                 await BackupService.shareBackup('json');
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     const SnackBar(content: Text('JSON backup shared')),
                   );
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                  messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
                 }
               }
             },
@@ -419,12 +383,14 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              navigator.pop();
               final success = await BackupService.restoreFromFile(
                 result.files.single.path!,
               );
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   SnackBar(
                     content: Text(
                       success ? 'Data restored successfully' : 'Restore failed',

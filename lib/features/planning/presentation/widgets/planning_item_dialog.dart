@@ -23,8 +23,12 @@ class _PlanningItemDialogState extends State<PlanningItemDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.item?.name ?? '');
-    _estimatedController = TextEditingController(text: widget.item?.estimatedCost.toStringAsFixed(0) ?? '');
-    _actualController = TextEditingController(text: widget.item?.actualCost.toStringAsFixed(0) ?? '0');
+    _estimatedController = TextEditingController(
+      text: widget.item?.estimatedCost.toStringAsFixed(0) ?? '',
+    );
+    _actualController = TextEditingController(
+      text: widget.item?.actualCost.toStringAsFixed(0) ?? '0',
+    );
     _notesController = TextEditingController(text: widget.item?.notes ?? '');
   }
 
@@ -50,7 +54,11 @@ class _PlanningItemDialogState extends State<PlanningItemDialog> {
           children: [
             Text(
               widget.item == null ? 'Add Planning Item' : 'Edit Planning Item',
-              style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 20),
             TextField(
@@ -80,7 +88,9 @@ class _PlanningItemDialogState extends State<PlanningItemDialog> {
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: InputDecoration(
                       labelText: 'Estimated Cost',
-                      labelStyle: const TextStyle(color: AppColors.textSecondary),
+                      labelStyle: const TextStyle(
+                        color: AppColors.textSecondary,
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderSide: const BorderSide(color: AppColors.border),
                         borderRadius: BorderRadius.circular(8),
@@ -101,7 +111,9 @@ class _PlanningItemDialogState extends State<PlanningItemDialog> {
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: InputDecoration(
                       labelText: 'Actual Cost',
-                      labelStyle: const TextStyle(color: AppColors.textSecondary),
+                      labelStyle: const TextStyle(
+                        color: AppColors.textSecondary,
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderSide: const BorderSide(color: AppColors.border),
                         borderRadius: BorderRadius.circular(8),
@@ -139,14 +151,19 @@ class _PlanningItemDialogState extends State<PlanningItemDialog> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton(
                   onPressed: _save,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   child: const Text('Save'),
                 ),
@@ -163,20 +180,26 @@ class _PlanningItemDialogState extends State<PlanningItemDialog> {
       return;
     }
 
-    final item = widget.item?.copyWith(
-      name: _nameController.text,
-      estimatedCost: double.parse(_estimatedController.text),
-      actualCost: double.parse(_actualController.text.isEmpty ? '0' : _actualController.text),
-      notes: _notesController.text,
-    ) ?? PlanningItem(
-      id: '',
-      name: _nameController.text,
-      estimatedCost: double.parse(_estimatedController.text),
-      actualCost: double.parse(_actualController.text.isEmpty ? '0' : _actualController.text),
-      notes: _notesController.text,
-      parentId: widget.parentId,
-      sortOrder: 0,
-    );
+    final item =
+        widget.item?.copyWith(
+          name: _nameController.text,
+          estimatedCost: double.parse(_estimatedController.text),
+          actualCost: double.parse(
+            _actualController.text.isEmpty ? '0' : _actualController.text,
+          ),
+          notes: _notesController.text,
+        ) ??
+        PlanningItem(
+          id: '',
+          name: _nameController.text,
+          estimatedCost: double.parse(_estimatedController.text),
+          actualCost: double.parse(
+            _actualController.text.isEmpty ? '0' : _actualController.text,
+          ),
+          notes: _notesController.text,
+          parentId: widget.parentId,
+          sortOrder: 0,
+        );
 
     Navigator.pop(context, item);
   }

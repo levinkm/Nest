@@ -32,7 +32,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           color: AppColors.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -46,7 +46,11 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               children: [
                 _buildNavItem(Icons.home_rounded, 'Home', 0),
                 _buildNavItem(Icons.analytics_rounded, 'Analytics', 1),
-                _buildNavItem(Icons.account_balance_wallet_rounded, 'Budget', 2),
+                _buildNavItem(
+                  Icons.account_balance_wallet_rounded,
+                  'Budget',
+                  2,
+                ),
                 _buildNavItem(Icons.more_horiz_rounded, 'More', 3),
               ],
             ),
@@ -63,7 +67,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

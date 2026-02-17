@@ -1,7 +1,5 @@
 import '../../features/transactions/domain/entities/transaction.dart' as domain;
 import '../../features/transactions/data/datasources/local_database.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
 class FinancialStats {
   final double totalIncome;
@@ -24,11 +22,13 @@ class FinancialStats {
 }
 
 class FinancialStatsCalculator {
-  static Future<FinancialStats> calculate(List<domain.Transaction> transactions) async {
+  static Future<FinancialStats> calculate(
+    List<domain.Transaction> transactions,
+  ) async {
     double totalIncome = 0;
     double totalExpense = 0;
     double totalTransfers = 0;
-    
+
     final expenseByCategory = <String, double>{};
     final incomeByCategory = <String, double>{};
 
@@ -40,10 +40,12 @@ class FinancialStatsCalculator {
 
       if (t.type == 'income') {
         totalIncome += t.amount;
-        incomeByCategory[t.category] = (incomeByCategory[t.category] ?? 0) + t.amount;
+        incomeByCategory[t.category] =
+            (incomeByCategory[t.category] ?? 0) + t.amount;
       } else if (t.type == 'expense') {
         totalExpense += t.amount;
-        expenseByCategory[t.category] = (expenseByCategory[t.category] ?? 0) + t.amount;
+        expenseByCategory[t.category] =
+            (expenseByCategory[t.category] ?? 0) + t.amount;
       }
       // debt and debt_payment don't affect income/expense
     }
@@ -67,8 +69,11 @@ class FinancialStatsCalculator {
     // Get debts from debt table
     final db = LocalDatabase();
     final debts = await db.getDebts();
-    double debtTotal = debts.fold<double>(0.0, (sum, d) => sum + (d['principal'] as double));
-    
+    double debtTotal = debts.fold<double>(
+      0.0,
+      (sum, d) => sum + (d['principal'] as double),
+    );
+
     // Add Fuliza debt from account balance
     final account = await db.getAccount('mpesa_default');
     if (account != null) {
@@ -77,7 +82,7 @@ class FinancialStatsCalculator {
         debtTotal += balance.abs();
       }
     }
-    
+
     return debtTotal;
   }
 
@@ -87,11 +92,16 @@ class FinancialStatsCalculator {
     return 0.0;
   }
 
-  static Map<String, double> calculateMonthlyTrend(List<domain.Transaction> transactions) {
+  static Map<String, double> calculateMonthlyTrend(
+    List<domain.Transaction> transactions,
+  ) {
     final monthlyExpense = <String, double>{};
-    
-    for (var t in transactions.where((t) => t.type == 'expense' && !t.isTransfer)) {
-      final monthKey = '${t.date.year}-${t.date.month.toString().padLeft(2, '0')}';
+
+    for (var t in transactions.where(
+      (t) => t.type == 'expense' && !t.isTransfer,
+    )) {
+      final monthKey =
+          '${t.date.year}-${t.date.month.toString().padLeft(2, '0')}';
       monthlyExpense[monthKey] = (monthlyExpense[monthKey] ?? 0) + t.amount;
     }
 

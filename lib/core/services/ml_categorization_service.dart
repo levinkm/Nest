@@ -1,6 +1,5 @@
 import 'dart:math';
 import '../../features/transactions/domain/entities/transaction.dart';
-import '../constants/app_constants.dart';
 
 class MLCategorizationService {
   static final MLCategorizationService _instance = MLCategorizationService._();
@@ -9,10 +8,44 @@ class MLCategorizationService {
 
   // Simple keyword-based ML model (can be replaced with TFLite model)
   final Map<String, List<String>> _categoryKeywords = {
-    'Food & Dining': ['restaurant', 'cafe', 'kfc', 'pizza', 'food', 'dining', 'eatery'],
-    'Shopping': ['supermarket', 'naivas', 'carrefour', 'quickmart', 'shop', 'jumia', 'kilimall', 'store'],
-    'Transportation': ['uber', 'bolt', 'matatu', 'taxi', 'fuel', 'petrol', 'transport'],
-    'Bills & Utilities': ['electricity', 'water', 'rent', 'kplc', 'nairobi water', 'bill', 'utility', 'paybill'],
+    'Food & Dining': [
+      'restaurant',
+      'cafe',
+      'kfc',
+      'pizza',
+      'food',
+      'dining',
+      'eatery',
+    ],
+    'Shopping': [
+      'supermarket',
+      'naivas',
+      'carrefour',
+      'quickmart',
+      'shop',
+      'jumia',
+      'kilimall',
+      'store',
+    ],
+    'Transportation': [
+      'uber',
+      'bolt',
+      'matatu',
+      'taxi',
+      'fuel',
+      'petrol',
+      'transport',
+    ],
+    'Bills & Utilities': [
+      'electricity',
+      'water',
+      'rent',
+      'kplc',
+      'nairobi water',
+      'bill',
+      'utility',
+      'paybill',
+    ],
     'Airtime & Data': ['airtime', 'bundles', 'data', 'safaricom', 'airtel'],
     'Entertainment': ['cinema', 'movie', 'netflix', 'spotify', 'entertainment'],
     'Mobile Money': ['mpesa', 'm-pesa', 'send money', 'withdraw', 'agent'],
@@ -23,23 +56,53 @@ class MLCategorizationService {
   };
 
   final List<String> _financialKeywords = [
-    'ksh', 'kes', 'paid', 'received', 'sent', 'balance', 'account',
-    'mpesa', 'm-pesa', 'transaction', 'withdraw', 'deposit', 'transfer',
-    'confirmed', 'receipt', 'charge', 'fee', 'amount', 'payment',
-    'bank', 'atm', 'paybill', 'till', 'buy goods', 'airtime',
+    'ksh',
+    'kes',
+    'paid',
+    'received',
+    'sent',
+    'balance',
+    'account',
+    'mpesa',
+    'm-pesa',
+    'transaction',
+    'withdraw',
+    'deposit',
+    'transfer',
+    'confirmed',
+    'receipt',
+    'charge',
+    'fee',
+    'amount',
+    'payment',
+    'bank',
+    'atm',
+    'paybill',
+    'till',
+    'buy goods',
+    'airtime',
   ];
 
   final List<String> _reminderKeywords = [
-    'reminder', 'due', 'upcoming', 'expires', 'renew', 'subscription',
-    'will be', 'please', 'kindly', 'remember', 'don\'t forget',
+    'reminder',
+    'due',
+    'upcoming',
+    'expires',
+    'renew',
+    'subscription',
+    'will be',
+    'please',
+    'kindly',
+    'remember',
+    'don\'t forget',
   ];
 
   bool isFinancialMessage(String message) {
     final lower = message.toLowerCase();
-    
+
     // Check if it's a reminder/notification
     if (_isReminderMessage(lower)) return false;
-    
+
     int matchCount = 0;
     for (final keyword in _financialKeywords) {
       if (lower.contains(keyword)) {
@@ -79,10 +142,10 @@ class MLCategorizationService {
     }
 
     if (scores.isEmpty) return null;
-    
+
     final sorted = scores.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    
+
     return sorted.first.key;
   }
 
@@ -90,14 +153,19 @@ class MLCategorizationService {
     if (history.isEmpty) return false;
 
     final categoryTransactions = history
-        .where((t) => t.category == transaction.category && t.type == transaction.type)
+        .where(
+          (t) =>
+              t.category == transaction.category && t.type == transaction.type,
+        )
         .toList();
 
     if (categoryTransactions.length < 3) return false;
 
     final amounts = categoryTransactions.map((t) => t.amount).toList();
     final mean = amounts.reduce((a, b) => a + b) / amounts.length;
-    final variance = amounts.map((a) => pow(a - mean, 2)).reduce((a, b) => a + b) / amounts.length;
+    final variance =
+        amounts.map((a) => pow(a - mean, 2)).reduce((a, b) => a + b) /
+        amounts.length;
     final stdDev = sqrt(variance);
 
     // Flag if transaction is more than 2 standard deviations from mean
@@ -116,25 +184,32 @@ class MLCategorizationService {
 
     final categorySpending = <String, double>{};
     for (final tx in expenses) {
-      categorySpending[tx.category] = (categorySpending[tx.category] ?? 0) + tx.amount;
+      categorySpending[tx.category] =
+          (categorySpending[tx.category] ?? 0) + tx.amount;
     }
 
     final total = categorySpending.values.reduce((a, b) => a + b);
-    final topCategory = categorySpending.entries.reduce((a, b) => a.value > b.value ? a : b);
+    final topCategory = categorySpending.entries.reduce(
+      (a, b) => a.value > b.value ? a : b,
+    );
 
-    final last30Days = expenses.where((t) => 
-      t.date.isAfter(DateTime.now().subtract(const Duration(days: 30)))
-    ).toList();
+    final last30Days = expenses
+        .where(
+          (t) =>
+              t.date.isAfter(DateTime.now().subtract(const Duration(days: 30))),
+        )
+        .toList();
 
-    final avgDailySpending = last30Days.isEmpty 
-        ? 0.0 
+    final avgDailySpending = last30Days.isEmpty
+        ? 0.0
         : last30Days.map((t) => t.amount).reduce((a, b) => a + b) / 30;
 
     return {
       'hasInsights': true,
       'topCategory': topCategory.key,
       'topCategoryAmount': topCategory.value,
-      'topCategoryPercentage': (topCategory.value / total * 100).toStringAsFixed(1),
+      'topCategoryPercentage': (topCategory.value / total * 100)
+          .toStringAsFixed(1),
       'avgDailySpending': avgDailySpending.toStringAsFixed(0),
       'totalCategories': categorySpending.length,
     };
@@ -145,20 +220,28 @@ class MLCategorizationService {
     if (!insights['hasInsights']) return [];
 
     final suggestions = <String>[];
-    
+
     final topCategoryPct = double.parse(insights['topCategoryPercentage']);
     if (topCategoryPct > 40) {
-      suggestions.add('${insights['topCategory']} takes ${insights['topCategoryPercentage']}% of spending. Consider reducing.');
+      suggestions.add(
+        '${insights['topCategory']} takes ${insights['topCategoryPercentage']}% of spending. Consider reducing.',
+      );
     }
 
     final avgDaily = double.parse(insights['avgDailySpending']);
     if (avgDaily > 1000) {
-      suggestions.add('Average daily spending is KSh ${insights['avgDailySpending']}. Set a daily budget.');
+      suggestions.add(
+        'Average daily spending is KSh ${insights['avgDailySpending']}. Set a daily budget.',
+      );
     }
 
-    final anomalies = transactions.where((t) => detectAnomaly(t, transactions)).toList();
+    final anomalies = transactions
+        .where((t) => detectAnomaly(t, transactions))
+        .toList();
     if (anomalies.isNotEmpty) {
-      suggestions.add('${anomalies.length} unusual transactions detected. Review for accuracy.');
+      suggestions.add(
+        '${anomalies.length} unusual transactions detected. Review for accuracy.',
+      );
     }
 
     return suggestions;

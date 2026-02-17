@@ -18,7 +18,7 @@ class SyncSmsTransactionsUseCase {
     // Get all SMS messages first
     final allMessages = await smsParser.parseAllSms(daysBack: daysBack);
     final db = LocalDatabase();
-    
+
     int addedCount = 0;
     double? latestBalance;
     double? latestFulizaBalance;
@@ -31,8 +31,10 @@ class SyncSmsTransactionsUseCase {
     await _processFulizaMessages(allMessages, db);
 
     // Process regular transactions
-    final smsTransactions = await smsParser.parseTransactionSms(daysBack: daysBack);
-    
+    final smsTransactions = await smsParser.parseTransactionSms(
+      daysBack: daysBack,
+    );
+
     for (var sms in smsTransactions) {
       // Track latest balance info
       if (sms.recordedBalance != null) {
@@ -42,7 +44,8 @@ class SyncSmsTransactionsUseCase {
         }
       }
       if (sms.fulizaBalance != null) {
-        if (latestFulizaDueDate == null || sms.date.isAfter(latestSmsDate ?? DateTime(2000))) {
+        if (latestFulizaDueDate == null ||
+            sms.date.isAfter(latestSmsDate ?? DateTime(2000))) {
           latestFulizaBalance = sms.fulizaBalance;
           latestFulizaDueDate = sms.fulizaDueDate;
         }
@@ -55,12 +58,13 @@ class SyncSmsTransactionsUseCase {
       }
 
       // Create unique ID from SMS content and timestamp to prevent duplicates
-      final transactionId = '${sms.description.hashCode}_${sms.amount}_${sms.date.millisecondsSinceEpoch}';
-      
+      final transactionId =
+          '${sms.description.hashCode}_${sms.amount}_${sms.date.millisecondsSinceEpoch}';
+
       // Determine account based on transaction type and counterparty
       String accountId;
       String? toAccountId;
-      
+
       if (sms.type == 'expense' && sms.counterparty != null) {
         // Money going out: from M-Pesa to counterparty
         accountId = 'mpesa_default';
@@ -73,7 +77,7 @@ class SyncSmsTransactionsUseCase {
         // Default to M-Pesa
         accountId = 'mpesa_default';
       }
-      
+
       final transaction = Transaction(
         id: const Uuid().v4(),
         amount: sms.amount,
@@ -92,7 +96,11 @@ class SyncSmsTransactionsUseCase {
 
     // Update recorded balance if found
     if (latestBalance != null && latestSmsDate != null) {
-      await db.updateRecordedBalance('mpesa_default', latestBalance, latestSmsDate);
+      await db.updateRecordedBalance(
+        'mpesa_default',
+        latestBalance,
+        latestSmsDate,
+      );
       // Also update the actual balance
       await db.updateAccountBalance('mpesa_default', latestBalance);
     }
@@ -135,7 +143,11 @@ class SyncSmsTransactionsUseCase {
         });
       } else {
         await db.updateAccountBalance('ziidi_default', latestZiidiBalance);
-        await db.updateRecordedBalance('ziidi_default', latestZiidiBalance, latestZiidiDate!);
+        await db.updateRecordedBalance(
+          'ziidi_default',
+          latestZiidiBalance,
+          latestZiidiDate!,
+        );
       }
     }
 
@@ -174,15 +186,19 @@ class SyncSmsTransactionsUseCase {
     }
   }
 
-  Future<void> _processFulizaMessages(List<Map<String, dynamic>> messages, LocalDatabase db) async {
+  Future<void> _processFulizaMessages(
+    List<Map<String, dynamic>> messages,
+    LocalDatabase db,
+  ) async {
     double? latestFulizaBalance;
     DateTime? latestFulizaDueDate;
     DateTime? latestDate;
-    double totalFulizaFees = 0.0;
+    final Map<String, double> fulizaFeesByTransaction = {};
 
     for (var msg in messages) {
       final body = msg['body'] as String? ?? '';
-      final timestamp = msg['date'] as int? ?? DateTime.now().millisecondsSinceEpoch;
+      final timestamp =
+          msg['date'] as int? ?? DateTime.now().millisecondsSinceEpoch;
       final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
       final lowerBody = body.toLowerCase();
 
@@ -195,10 +211,11 @@ class SyncSmsTransactionsUseCase {
         final match = balanceRegex.firstMatch(body);
         if (match != null) {
           final balance = double.tryParse(match.group(1)!.replaceAll(',', ''));
-          if (balance != null && (latestDate == null || date.isAfter(latestDate))) {
+          if (balance != null &&
+              (latestDate == null || date.isAfter(latestDate))) {
             latestFulizaBalance = balance;
             latestDate = date;
-            
+
             // Extract due date
             final dueDateRegex = RegExp(r'due on (\d{1,2})/(\d{1,2})/(\d{2})');
             final dueDateMatch = dueDateRegex.firstMatch(body);
@@ -210,13 +227,21 @@ class SyncSmsTransactionsUseCase {
             }
           }
         }
-        
-        // Extract and track Fuliza access fee
-        final feeRegex = RegExp(r'access fee charged\s*ksh\s*([\d,]+\.?\d*)', caseSensitive: false);
+
+        // Extract transaction code and fee
+        final transactionCodeRegex = RegExp(r'\b([A-Z0-9]{10})\b');
+        final codeMatch = transactionCodeRegex.firstMatch(body);
+        final feeRegex = RegExp(
+          r'access fee charged\s*ksh\s*([\d,]+\.?\d*)',
+          caseSensitive: false,
+        );
         final feeMatch = feeRegex.firstMatch(body);
-        if (feeMatch != null) {
-          final fee = double.tryParse(feeMatch.group(1)!.replaceAll(',', '')) ?? 0.0;
-          totalFulizaFees += fee;
+
+        if (codeMatch != null && feeMatch != null) {
+          final transactionCode = codeMatch.group(1)!;
+          final fee =
+              double.tryParse(feeMatch.group(1)!.replaceAll(',', '')) ?? 0.0;
+          fulizaFeesByTransaction[transactionCode] = fee;
         }
       }
 
@@ -249,19 +274,25 @@ class SyncSmsTransactionsUseCase {
         await db.updateDebt('fuliza_mpesa', {'isActive': 0});
       }
     }
-    
-    // Create a fee transaction for Fuliza access fees if any
-    if (totalFulizaFees > 0) {
-      developer.log('Creating fee transaction for Fuliza fees: $totalFulizaFees');
+
+    // Create individual fee transactions for each Fuliza access fee
+    for (var entry in fulizaFeesByTransaction.entries) {
+      final transactionCode = entry.key;
+      final fee = entry.value;
+
+      developer.log(
+        'Creating fee transaction for Fuliza: $transactionCode - $fee',
+      );
       await db.insertTransaction(
         Transaction(
-          id: 'fuliza_fees_${DateTime.now().millisecondsSinceEpoch}',
-          amount: totalFulizaFees,
+          id: const Uuid().v4(),
+          amount: fee,
           category: 'Interest & Fees',
           description: 'Fuliza Access Fees',
           date: DateTime.now(),
           type: 'expense',
-          fee: totalFulizaFees,
+          transactionId: '${transactionCode}_fuliza_fee',
+          fee: fee,
           accountId: 'mpesa_default',
         ),
       );

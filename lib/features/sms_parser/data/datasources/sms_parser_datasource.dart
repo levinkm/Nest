@@ -79,6 +79,13 @@ class SmsParserDataSource {
       return null;
     }
 
+    // Skip standalone Fuliza Access Fees (no transaction code)
+    if (body.toLowerCase().contains('fuliza access fees') &&
+        !RegExp(r'\b[A-Z0-9]{10}\b').hasMatch(body)) {
+      developer.log('Skipping standalone Fuliza Access Fees notification');
+      return null;
+    }
+
     // Extract balance and Fuliza info
     final balanceInfo = _extractBalanceInfo(body);
 
@@ -155,14 +162,20 @@ class SmsParserDataSource {
     // For expenses (sent to/paid to)
     if (type == 'expense') {
       // "sent to PERSON NAME" or "sent to COMPANY for account"
-      final sentToRegex = RegExp(r'sent to ([A-Z][A-Z\s&.]+?)(?:\s+for account|\s+\d{10}|\s+on)', caseSensitive: false);
+      final sentToRegex = RegExp(
+        r'sent to ([A-Z][A-Z\s&.]+?)(?:\s+for account|\s+\d{10}|\s+on)',
+        caseSensitive: false,
+      );
       final sentMatch = sentToRegex.firstMatch(body);
       if (sentMatch != null) {
         return sentMatch.group(1)!.trim();
       }
 
       // "paid to MERCHANT"
-      final paidToRegex = RegExp(r'paid to ([A-Z][A-Z\s&.]+?)(?:\s+via|\.|\s+on)', caseSensitive: false);
+      final paidToRegex = RegExp(
+        r'paid to ([A-Z][A-Z\s&.]+?)(?:\s+via|\.|\s+on)',
+        caseSensitive: false,
+      );
       final paidMatch = paidToRegex.firstMatch(body);
       if (paidMatch != null) {
         return paidMatch.group(1)!.trim();
@@ -172,7 +185,10 @@ class SmsParserDataSource {
     // For income (received from)
     if (type == 'income') {
       // "received from PERSON NAME"
-      final receivedRegex = RegExp(r'(?:received from|from) ([A-Z][A-Z\s&.]+?)(?:\s+\d{10}|\s+on)', caseSensitive: false);
+      final receivedRegex = RegExp(
+        r'(?:received from|from) ([A-Z][A-Z\s&.]+?)(?:\s+\d{10}|\s+on)',
+        caseSensitive: false,
+      );
       final receivedMatch = receivedRegex.firstMatch(body);
       if (receivedMatch != null) {
         return receivedMatch.group(1)!.trim();
@@ -198,13 +214,13 @@ class SmsParserDataSource {
 
   bool _isNotificationOnly(String body) {
     final lowerBody = body.toLowerCase();
-    
+
     // Standalone Fuliza Access Fees messages (no transaction code)
-    if (lowerBody.contains('fuliza access fees') && 
+    if (lowerBody.contains('fuliza access fees') &&
         !lowerBody.contains('confirmed')) {
       return true;
     }
-    
+
     // Loan reminders/notifications (not actual transactions)
     if ((lowerBody.contains('due on') || lowerBody.contains('is due')) &&
         !lowerBody.contains('confirmed') &&
@@ -212,21 +228,21 @@ class SmsParserDataSource {
         !lowerBody.contains('fuliza access fees')) {
       return true;
     }
-    
+
     // OTP/verification codes
     if (lowerBody.contains('verification code') ||
         lowerBody.contains('otp') ||
         lowerBody.contains('do not share')) {
       return true;
     }
-    
+
     // Marketing/promotional messages
     if (lowerBody.contains('congratulations') ||
         lowerBody.contains('you qualify') ||
         lowerBody.contains('apply now')) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -235,8 +251,8 @@ class SmsParserDataSource {
 
     // Fuliza repayment - skip (handled separately in debt manager)
     if (lowerBody.contains('fuliza') &&
-        (lowerBody.contains('used to') && 
-         (lowerBody.contains('pay') || lowerBody.contains('repay')))) {
+        (lowerBody.contains('used to') &&
+            (lowerBody.contains('pay') || lowerBody.contains('repay')))) {
       return null; // Skip - will be handled by debt manager
     }
 
@@ -246,8 +262,9 @@ class SmsParserDataSource {
     }
 
     // Ziidi/investment withdrawals - income (money coming to M-Pesa)
-    if (lowerBody.contains('withdrawn') && 
-        (lowerBody.contains('ziidi') || lowerBody.contains('transaction code'))) {
+    if (lowerBody.contains('withdrawn') &&
+        (lowerBody.contains('ziidi') ||
+            lowerBody.contains('transaction code'))) {
       return 'income';
     }
 
@@ -309,12 +326,7 @@ class SmsParserDataSource {
 
   String _categorizeTransaction(String message) {
     final keywords = {
-      'Investments': [
-        'ziidi',
-        'invested',
-        'investment',
-        'mmf',
-      ],
+      'Investments': ['ziidi', 'invested', 'investment', 'mmf'],
       'Food & Dining': [
         'swiggy',
         'zomato',
@@ -380,30 +392,39 @@ class SmsParserDataSource {
     if (body.toLowerCase().contains('fuliza access fees')) {
       return 0.0;
     }
-    
+
     // M-Pesa fee patterns - multiple variations
     final feePatterns = [
-      RegExp(r'transaction cost[,:]?\s*ksh\.?\s*([\d,]+\.?\d*)', caseSensitive: false),
-      RegExp(r'access fee charged\s*ksh\.?\s*([\d,]+\.?\d*)', caseSensitive: false),
-      RegExp(r'transaction fee[,:]?\s*ksh\.?\s*([\d,]+\.?\d*)', caseSensitive: false),
+      RegExp(
+        r'transaction cost[,:]?\s*ksh\.?\s*([\d,]+\.?\d*)',
+        caseSensitive: false,
+      ),
+      RegExp(
+        r'access fee charged\s*ksh\.?\s*([\d,]+\.?\d*)',
+        caseSensitive: false,
+      ),
+      RegExp(
+        r'transaction fee[,:]?\s*ksh\.?\s*([\d,]+\.?\d*)',
+        caseSensitive: false,
+      ),
     ];
-    
+
     for (var pattern in feePatterns) {
       final match = pattern.firstMatch(body);
       if (match != null) {
         final feeStr = match.group(1)!.replaceAll(',', '');
         final fee = double.tryParse(feeStr) ?? 0.0;
-        developer.log('Extracted fee: $fee from: ${body.substring(0, body.length > 100 ? 100 : body.length)}');
+        developer.log(
+          'Extracted fee: $fee from: ${body.substring(0, body.length > 100 ? 100 : body.length)}',
+        );
         return fee;
       }
     }
-    
+
     return 0.0;
   }
 
   Map<String, dynamic> _extractBalanceInfo(String body) {
-    final lowerBody = body.toLowerCase();
-    
     // M-Pesa balance: "New M-PESA balance is Ksh152.95"
     final mpesaBalanceRegex = RegExp(
       r'(?:new )?m-pesa balance is ksh\s*([\d,]+\.?\d*)',

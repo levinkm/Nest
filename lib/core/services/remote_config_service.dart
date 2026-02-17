@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../features/transactions/data/models/categorization_models.dart';
@@ -13,20 +14,24 @@ class RemoteConfigService {
   Future<void> initialize() async {
     try {
       _remoteConfig = FirebaseRemoteConfig.instance;
-      await _remoteConfig!.setConfigSettings(RemoteConfigSettings(
-        fetchTimeout: const Duration(seconds: 10),
-        minimumFetchInterval: const Duration(hours: 1),
-      ));
+      await _remoteConfig!.setConfigSettings(
+        RemoteConfigSettings(
+          fetchTimeout: const Duration(seconds: 10),
+          minimumFetchInterval: const Duration(hours: 1),
+        ),
+      );
       await _remoteConfig!.fetchAndActivate();
     } catch (e) {
-      print('Remote Config initialization failed: $e');
+      if (kDebugMode) {
+        print('Remote Config initialization failed: $e');
+      }
     }
   }
 
   Future<List<CategorizationRule>?> getClassificationRules() async {
     try {
       final connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
+      if (connectivityResult.contains(ConnectivityResult.none)) {
         return null;
       }
 
@@ -38,9 +43,13 @@ class RemoteConfigService {
       if (rulesJson.isEmpty) return null;
 
       final List<dynamic> rulesList = json.decode(rulesJson);
-      return rulesList.map((json) => CategorizationRule.fromJson(json)).toList();
+      return rulesList
+          .map((json) => CategorizationRule.fromJson(json))
+          .toList();
     } catch (e) {
-      print('Failed to fetch classification rules: $e');
+      if (kDebugMode) {
+        print('Failed to fetch classification rules: $e');
+      }
       return null;
     }
   }

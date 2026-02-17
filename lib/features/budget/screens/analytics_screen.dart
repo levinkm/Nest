@@ -22,7 +22,6 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget _buildSummaryCard() {
-    final progress = budget.percentage;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),

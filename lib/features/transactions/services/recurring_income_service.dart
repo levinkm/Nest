@@ -15,8 +15,9 @@ class RecurringIncomeService {
       final income = RecurringIncome.fromJson(incomeData);
 
       // Skip if merchant name is set (SMS-based)
-      if (income.merchantName != null && income.merchantName!.isNotEmpty)
+      if (income.merchantName != null && income.merchantName!.isNotEmpty) {
         continue;
+      }
 
       // Check if income is due
       final nextExpected =

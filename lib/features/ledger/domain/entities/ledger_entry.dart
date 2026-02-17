@@ -19,5 +19,6 @@ class LedgerEntry with _$LedgerEntry {
     String? reference,
   }) = _LedgerEntry;
 
-  factory LedgerEntry.fromJson(Map<String, dynamic> json) => _$LedgerEntryFromJson(json);
+  factory LedgerEntry.fromJson(Map<String, dynamic> json) =>
+      _$LedgerEntryFromJson(json);
 }

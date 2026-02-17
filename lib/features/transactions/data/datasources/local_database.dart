@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../../domain/entities/transaction.dart' as domain;
@@ -55,7 +56,7 @@ class LocalDatabase {
         FOREIGN KEY (toAccountId) REFERENCES accounts(id)
       )
     ''');
-    
+
     await db.execute('''
       CREATE TABLE budgets(
         id TEXT PRIMARY KEY,
@@ -200,6 +201,22 @@ class LocalDatabase {
       'isActive': 1,
       'createdAt': DateTime.now().toIso8601String(),
     });
+
+    // Create indexes for performance
+    await db.execute(
+      'CREATE INDEX idx_transactions_date ON transactions(date DESC)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_transactions_category ON transactions(category)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_transactions_type ON transactions(type)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_transactions_accountId ON transactions(accountId)',
+    );
+    await db.execute('CREATE INDEX idx_budgets_category ON budgets(category)');
+    await db.execute('CREATE INDEX idx_bills_dueDate ON bills(dueDate)');
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -217,7 +234,9 @@ class LocalDatabase {
       ''');
     }
     if (oldVersion < 3) {
-      await db.execute('ALTER TABLE transactions ADD COLUMN transactionId TEXT');
+      await db.execute(
+        'ALTER TABLE transactions ADD COLUMN transactionId TEXT',
+      );
     }
     if (oldVersion < 4) {
       await db.execute('''
@@ -233,11 +252,13 @@ class LocalDatabase {
           updatedAt TEXT
         )
       ''');
-      
-      await db.execute('ALTER TABLE transactions ADD COLUMN fee REAL DEFAULT 0');
+
+      await db.execute(
+        'ALTER TABLE transactions ADD COLUMN fee REAL DEFAULT 0',
+      );
       await db.execute('ALTER TABLE transactions ADD COLUMN accountId TEXT');
       await db.execute('ALTER TABLE transactions ADD COLUMN toAccountId TEXT');
-      
+
       await db.execute('''
         CREATE TABLE IF NOT EXISTS debts(
           id TEXT PRIMARY KEY,
@@ -262,7 +283,7 @@ class LocalDatabase {
           createdAt TEXT
         )
       ''');
-      
+
       await db.insert('accounts', {
         'id': 'mpesa_default',
         'name': 'M-Pesa',
@@ -300,23 +321,47 @@ class LocalDatabase {
     if (oldVersion < 6) {
       try {
         await db.execute('ALTER TABLE budgets ADD COLUMN name TEXT');
-        await db.execute('ALTER TABLE budgets ADD COLUMN type TEXT DEFAULT "category"');
+        await db.execute(
+          'ALTER TABLE budgets ADD COLUMN type TEXT DEFAULT "category"',
+        );
         await db.execute('ALTER TABLE budgets ADD COLUMN amount REAL');
-        await db.execute('ALTER TABLE budgets ADD COLUMN autoAllocate INTEGER DEFAULT 0');
-        await db.execute('ALTER TABLE budgets ADD COLUMN percentageOfIncome REAL');
-        await db.execute('ALTER TABLE budgets ADD COLUMN rolloverEnabled INTEGER DEFAULT 0');
-        await db.execute('ALTER TABLE budgets ADD COLUMN rolloverAmount REAL DEFAULT 0');
-        await db.execute('ALTER TABLE budgets ADD COLUMN isProject INTEGER DEFAULT 0');
+        await db.execute(
+          'ALTER TABLE budgets ADD COLUMN autoAllocate INTEGER DEFAULT 0',
+        );
+        await db.execute(
+          'ALTER TABLE budgets ADD COLUMN percentageOfIncome REAL',
+        );
+        await db.execute(
+          'ALTER TABLE budgets ADD COLUMN rolloverEnabled INTEGER DEFAULT 0',
+        );
+        await db.execute(
+          'ALTER TABLE budgets ADD COLUMN rolloverAmount REAL DEFAULT 0',
+        );
+        await db.execute(
+          'ALTER TABLE budgets ADD COLUMN isProject INTEGER DEFAULT 0',
+        );
         await db.execute('ALTER TABLE budgets ADD COLUMN projectGoal TEXT');
-        await db.execute('ALTER TABLE budgets ADD COLUMN linkedTransactionIds TEXT');
-        await db.execute('ALTER TABLE budgets ADD COLUMN alertAt REAL DEFAULT 80');
-        await db.execute('ALTER TABLE budgets ADD COLUMN notificationsEnabled INTEGER DEFAULT 1');
-        await db.execute('ALTER TABLE budgets ADD COLUMN averageSpending REAL DEFAULT 0');
-        await db.execute('ALTER TABLE budgets ADD COLUMN predictedSpending REAL DEFAULT 0');
+        await db.execute(
+          'ALTER TABLE budgets ADD COLUMN linkedTransactionIds TEXT',
+        );
+        await db.execute(
+          'ALTER TABLE budgets ADD COLUMN alertAt REAL DEFAULT 80',
+        );
+        await db.execute(
+          'ALTER TABLE budgets ADD COLUMN notificationsEnabled INTEGER DEFAULT 1',
+        );
+        await db.execute(
+          'ALTER TABLE budgets ADD COLUMN averageSpending REAL DEFAULT 0',
+        );
+        await db.execute(
+          'ALTER TABLE budgets ADD COLUMN predictedSpending REAL DEFAULT 0',
+        );
         await db.execute('ALTER TABLE budgets ADD COLUMN createdAt TEXT');
         await db.execute('ALTER TABLE budgets ADD COLUMN updatedAt TEXT');
-        await db.execute('ALTER TABLE budgets ADD COLUMN isActive INTEGER DEFAULT 1');
-        
+        await db.execute(
+          'ALTER TABLE budgets ADD COLUMN isActive INTEGER DEFAULT 1',
+        );
+
         await db.execute('''
           UPDATE budgets SET 
             name = category,
@@ -326,7 +371,7 @@ class LocalDatabase {
           WHERE name IS NULL
         ''');
       } catch (e) {
-        print('Budget migration: $e');
+        if (kDebugMode) print('Budget migration: $e');
       }
     }
     if (oldVersion < 7) {
@@ -379,26 +424,59 @@ class LocalDatabase {
     }
     if (oldVersion < 9) {
       try {
-        await db.execute('ALTER TABLE planning_items ADD COLUMN quantity INTEGER DEFAULT 1');
+        await db.execute(
+          'ALTER TABLE planning_items ADD COLUMN quantity INTEGER DEFAULT 1',
+        );
       } catch (e) {
-        print('Quantity column migration: $e');
+        if (kDebugMode) print('Quantity column migration: $e');
       }
     }
     if (oldVersion < 10) {
       try {
         await db.execute('ALTER TABLE planning_items ADD COLUMN tag TEXT');
       } catch (e) {
-        print('Tag column migration: $e');
+        if (kDebugMode) print('Tag column migration: $e');
       }
     }
     if (oldVersion < 11) {
       // Ensure both columns exist
       try {
-        await db.execute('ALTER TABLE planning_items ADD COLUMN quantity INTEGER DEFAULT 1');
-      } catch (e) {}
+        await db.execute(
+          'ALTER TABLE planning_items ADD COLUMN quantity INTEGER DEFAULT 1',
+        );
+      } catch (_) {
+        // Column may already exist
+      }
       try {
         await db.execute('ALTER TABLE planning_items ADD COLUMN tag TEXT');
-      } catch (e) {}
+      } catch (_) {
+        // Column may already exist
+      }
+    }
+    if (oldVersion < 12) {
+      // Add indexes for performance
+      try {
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date DESC)',
+        );
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category)',
+        );
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type)',
+        );
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_transactions_accountId ON transactions(accountId)',
+        );
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_budgets_category ON budgets(category)',
+        );
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_bills_dueDate ON bills(dueDate)',
+        );
+      } catch (e) {
+        if (kDebugMode) print('Index creation error: $e');
+      }
     }
   }
 
@@ -407,7 +485,9 @@ class LocalDatabase {
     try {
       // Check if transaction with same transactionId already exists
       if (transaction.transactionId != null) {
-        print('Inserting transaction with ID: ${transaction.transactionId}');
+        if (kDebugMode) {
+          print('Inserting transaction with ID: ${transaction.transactionId}');
+        }
         final existing = await db.query(
           'transactions',
           where: 'transactionId = ?',
@@ -415,19 +495,25 @@ class LocalDatabase {
           limit: 1,
         );
         if (existing.isNotEmpty) {
-          print('Duplicate found, skipping: ${transaction.transactionId}');
+          if (kDebugMode) {
+            print('Duplicate found, skipping: ${transaction.transactionId}');
+          }
           return; // Skip duplicate
         }
       }
-      
+
       await db.insert(
         'transactions',
         TransactionModel.toJson(transaction),
         conflictAlgorithm: ConflictAlgorithm.ignore,
       );
-      print('Transaction inserted successfully: ${transaction.transactionId}');
+      if (kDebugMode) {
+        print(
+          'Transaction inserted successfully: ${transaction.transactionId}',
+        );
+      }
     } catch (e) {
-      print('Error inserting transaction: $e');
+      if (kDebugMode) print('Error inserting transaction: $e');
     }
   }
 
@@ -446,8 +532,14 @@ class LocalDatabase {
 
   Future<List<domain.Transaction>> getTransactions() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('transactions', orderBy: 'date DESC');
-    return List.generate(maps.length, (i) => TransactionModel.fromJson(maps[i]));
+    final List<Map<String, dynamic>> maps = await db.query(
+      'transactions',
+      orderBy: 'date DESC',
+    );
+    return List.generate(
+      maps.length,
+      (i) => TransactionModel.fromJson(maps[i]),
+    );
   }
 
   Future<void> deleteTransaction(String id) async {
@@ -457,7 +549,11 @@ class LocalDatabase {
 
   Future<void> insertBudget(Budget budget) async {
     final db = await database;
-    await db.insert('budgets', budget.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'budgets',
+      budget.toJson(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<Budget>> getBudgets({bool activeOnly = true}) async {
@@ -467,13 +563,13 @@ class LocalDatabase {
         : await db.query('budgets');
     return maps.map((m) => Budget.fromJson(m)).toList();
   }
-  
+
   Future<Budget?> getBudget(String id) async {
     final db = await database;
     final results = await db.query('budgets', where: 'id = ?', whereArgs: [id]);
     return results.isNotEmpty ? Budget.fromJson(results.first) : null;
   }
-  
+
   Future<void> updateBudget(String id, Map<String, dynamic> updates) async {
     final db = await database;
     updates['updatedAt'] = DateTime.now().toIso8601String();
@@ -488,7 +584,11 @@ class LocalDatabase {
   // Account methods
   Future<void> insertAccount(Map<String, dynamic> account) async {
     final db = await database;
-    await db.insert('accounts', account, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'accounts',
+      account,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<Map<String, dynamic>>> getAccounts() async {
@@ -498,7 +598,11 @@ class LocalDatabase {
 
   Future<Map<String, dynamic>?> getAccount(String id) async {
     final db = await database;
-    final results = await db.query('accounts', where: 'id = ?', whereArgs: [id]);
+    final results = await db.query(
+      'accounts',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     return results.isNotEmpty ? results.first : null;
   }
 
@@ -512,21 +616,28 @@ class LocalDatabase {
     );
   }
 
-  Future<void> updateRecordedBalance(String accountId, double recordedBalance, DateTime smsDate) async {
+  Future<void> updateRecordedBalance(
+    String accountId,
+    double recordedBalance,
+    DateTime smsDate,
+  ) async {
     final db = await database;
     await db.update(
       'accounts',
       {
         'recordedBalance': recordedBalance,
         'lastSmsDate': smsDate.toIso8601String(),
-        'updatedAt': DateTime.now().toIso8601String()
+        'updatedAt': DateTime.now().toIso8601String(),
       },
       where: 'id = ?',
       whereArgs: [accountId],
     );
   }
 
-  Future<void> updateAccountOverdraft(String accountId, double overdraft) async {
+  Future<void> updateAccountOverdraft(
+    String accountId,
+    double overdraft,
+  ) async {
     final db = await database;
     await db.update(
       'accounts',
@@ -539,7 +650,11 @@ class LocalDatabase {
   // Debt methods
   Future<void> insertDebt(Map<String, dynamic> debt) async {
     final db = await database;
-    await db.insert('debts', debt, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'debts',
+      debt,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<Map<String, dynamic>>> getDebts() async {
@@ -560,7 +675,11 @@ class LocalDatabase {
   // SMS Sender methods
   Future<void> insertSmsSender(Map<String, dynamic> sender) async {
     final db = await database;
-    await db.insert('sms_senders', sender, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'sms_senders',
+      sender,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<Map<String, dynamic>>> getSmsSenders() async {
@@ -570,19 +689,33 @@ class LocalDatabase {
 
   Future<void> deleteSmsSender(String id) async {
     final db = await database;
-    await db.update('sms_senders', {'isActive': 0}, where: 'id = ?', whereArgs: [id]);
+    await db.update(
+      'sms_senders',
+      {'isActive': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   // Bill methods
   Future<void> insertBill(Map<String, dynamic> bill) async {
     final db = await database;
-    await db.insert('bills', bill, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'bills',
+      bill,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<Map<String, dynamic>>> getBills({bool activeOnly = true}) async {
     final db = await database;
     if (activeOnly) {
-      return await db.query('bills', where: 'isActive = ?', whereArgs: [1], orderBy: 'dueDate ASC');
+      return await db.query(
+        'bills',
+        where: 'isActive = ?',
+        whereArgs: [1],
+        orderBy: 'dueDate ASC',
+      );
     }
     return await db.query('bills', orderBy: 'dueDate ASC');
   }
@@ -597,7 +730,11 @@ class LocalDatabase {
     await db.update('bills', {'isActive': 0}, where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<void> markBillAsPaid(String billId, String transactionId, DateTime paidDate) async {
+  Future<void> markBillAsPaid(
+    String billId,
+    String transactionId,
+    DateTime paidDate,
+  ) async {
     final db = await database;
     await db.update(
       'bills',
@@ -614,46 +751,93 @@ class LocalDatabase {
   // Categorization Rules methods
   Future<void> insertCategorizationRule(Map<String, dynamic> rule) async {
     final db = await database;
-    await db.insert('categorization_rules', rule, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'categorization_rules',
+      rule,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
-  Future<List<Map<String, dynamic>>> getCategorizationRules({bool activeOnly = true}) async {
+  Future<List<Map<String, dynamic>>> getCategorizationRules({
+    bool activeOnly = true,
+  }) async {
     final db = await database;
     return activeOnly
-        ? await db.query('categorization_rules', where: 'isActive = ?', whereArgs: [1], orderBy: 'priority DESC')
+        ? await db.query(
+            'categorization_rules',
+            where: 'isActive = ?',
+            whereArgs: [1],
+            orderBy: 'priority DESC',
+          )
         : await db.query('categorization_rules', orderBy: 'priority DESC');
   }
 
-  Future<void> updateCategorizationRule(String id, Map<String, dynamic> updates) async {
+  Future<void> updateCategorizationRule(
+    String id,
+    Map<String, dynamic> updates,
+  ) async {
     final db = await database;
-    await db.update('categorization_rules', updates, where: 'id = ?', whereArgs: [id]);
+    await db.update(
+      'categorization_rules',
+      updates,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<void> deleteCategorizationRule(String id) async {
     final db = await database;
-    await db.update('categorization_rules', {'isActive': 0}, where: 'id = ?', whereArgs: [id]);
+    await db.update(
+      'categorization_rules',
+      {'isActive': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   // Recurring Income methods
   Future<void> insertRecurringIncome(Map<String, dynamic> income) async {
     final db = await database;
-    await db.insert('recurring_incomes', income, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'recurring_incomes',
+      income,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
-  Future<List<Map<String, dynamic>>> getRecurringIncomes({bool activeOnly = true}) async {
+  Future<List<Map<String, dynamic>>> getRecurringIncomes({
+    bool activeOnly = true,
+  }) async {
     final db = await database;
     return activeOnly
-        ? await db.query('recurring_incomes', where: 'isActive = ?', whereArgs: [1])
+        ? await db.query(
+            'recurring_incomes',
+            where: 'isActive = ?',
+            whereArgs: [1],
+          )
         : await db.query('recurring_incomes');
   }
 
-  Future<void> updateRecurringIncome(String id, Map<String, dynamic> updates) async {
+  Future<void> updateRecurringIncome(
+    String id,
+    Map<String, dynamic> updates,
+  ) async {
     final db = await database;
-    await db.update('recurring_incomes', updates, where: 'id = ?', whereArgs: [id]);
+    await db.update(
+      'recurring_incomes',
+      updates,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<void> deleteRecurringIncome(String id) async {
     final db = await database;
-    await db.update('recurring_incomes', {'isActive': 0}, where: 'id = ?', whereArgs: [id]);
+    await db.update(
+      'recurring_incomes',
+      {'isActive': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }

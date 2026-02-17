@@ -8,26 +8,26 @@ class Budget {
   final String period;
   final DateTime startDate;
   final DateTime endDate;
-  
+
   // Smart features
   final bool autoAllocate;
   final double? percentageOfIncome;
   final bool rolloverEnabled;
   final double rolloverAmount;
-  
+
   // Project-based
   final bool isProject;
   final String? projectGoal;
   final List<String> linkedTransactionIds;
-  
+
   // Alerts
   final double alertAt;
   final bool notificationsEnabled;
-  
+
   // Analytics
   final double averageSpending;
   final double predictedSpending;
-  
+
   // Metadata
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -66,20 +66,21 @@ class Budget {
   double get remaining => amount - spent;
   double get percentage => amount > 0 ? (spent / amount * 100) : 0;
   bool get isOverBudget => spent > amount;
-  
+
   int get daysLeft => endDate.difference(DateTime.now()).inDays;
   int get totalDays => endDate.difference(startDate).inDays;
   int get daysElapsed => DateTime.now().difference(startDate).inDays;
-  
+
   double get dailyBudget => daysLeft > 0 ? remaining / daysLeft : 0;
-  double get expectedSpent => totalDays > 0 ? amount * (daysElapsed / totalDays) : 0;
-  
+  double get expectedSpent =>
+      totalDays > 0 ? amount * (daysElapsed / totalDays) : 0;
+
   String get paceStatus {
     if (spent > expectedSpent * 1.2) return 'fast';
     if (spent > expectedSpent) return 'ahead';
     return 'on-track';
   }
-  
+
   bool get shouldAlert => percentage >= alertAt;
 
   Map<String, dynamic> toJson() => {
@@ -113,7 +114,8 @@ class Budget {
     name: json['name'] ?? json['category'] ?? 'Budget',
     type: json['type'] ?? 'category',
     category: json['category'],
-    amount: (json['amount'] ?? json['limit_amount'] ?? json['limit'] ?? 0).toDouble(),
+    amount: (json['amount'] ?? json['limit_amount'] ?? json['limit'] ?? 0)
+        .toDouble(),
     spent: (json['spent'] ?? 0).toDouble(),
     period: json['period'] ?? 'Monthly',
     startDate: DateTime.parse(json['startDate']),
@@ -124,18 +126,25 @@ class Budget {
     rolloverAmount: (json['rolloverAmount'] ?? 0).toDouble(),
     isProject: (json['isProject'] ?? 0) == 1,
     projectGoal: json['projectGoal'],
-    linkedTransactionIds: json['linkedTransactionIds'] != null 
-        ? (json['linkedTransactionIds'] as String).split(',').where((s) => s.isNotEmpty).toList()
+    linkedTransactionIds: json['linkedTransactionIds'] != null
+        ? (json['linkedTransactionIds'] as String)
+              .split(',')
+              .where((s) => s.isNotEmpty)
+              .toList()
         : [],
     alertAt: (json['alertAt'] ?? 80).toDouble(),
     notificationsEnabled: (json['notificationsEnabled'] ?? 1) == 1,
     averageSpending: (json['averageSpending'] ?? 0).toDouble(),
     predictedSpending: (json['predictedSpending'] ?? 0).toDouble(),
-    createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
-    updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
+    createdAt: json['createdAt'] != null
+        ? DateTime.parse(json['createdAt'])
+        : DateTime.now(),
+    updatedAt: json['updatedAt'] != null
+        ? DateTime.parse(json['updatedAt'])
+        : DateTime.now(),
     isActive: (json['isActive'] ?? 1) == 1,
   );
-  
+
   Budget copyWith({
     String? id,
     String? name,

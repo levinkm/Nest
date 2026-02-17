@@ -2,12 +2,10 @@ import 'dart:developer' as developer;
 import '../../../../core/utils/classification_rules.dart';
 
 class TransactionClassifier {
-  bool _isInitialized = false;
   ClassificationRules? _rules;
 
   Future<void> initialize() async {
     _rules = await ClassificationRules.load();
-    _isInitialized = true;
     developer.log('Loaded classification rules');
   }
 

@@ -24,7 +24,11 @@ class _PinSetupPageState extends State<PinSetupPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_outline, size: 80, color: AppColors.primary),
+              const Icon(
+                Icons.lock_outline,
+                size: 80,
+                color: AppColors.primary,
+              ),
               const SizedBox(height: 24),
               Text(
                 _isConfirming ? 'Confirm PIN' : 'Set up PIN',
@@ -36,8 +40,13 @@ class _PinSetupPageState extends State<PinSetupPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                _isConfirming ? 'Re-enter your 4-digit PIN' : 'Create a 4-digit PIN to secure your app',
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                _isConfirming
+                    ? 'Re-enter your 4-digit PIN'
+                    : 'Create a 4-digit PIN to secure your app',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
@@ -61,7 +70,9 @@ class _PinSetupPageState extends State<PinSetupPage> {
           height: 16,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: index < pin.length ? AppColors.primary : AppColors.surfaceLight,
+            color: index < pin.length
+                ? AppColors.primary
+                : AppColors.surfaceLight,
           ),
         );
       }),
@@ -85,16 +96,16 @@ class _PinSetupPageState extends State<PinSetupPage> {
   Widget _buildNumRow(List<String> numbers) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: numbers.map((num) {
-        if (num.isEmpty) return const SizedBox(width: 80);
-        return _buildNumButton(num);
+      children: numbers.map((number) {
+        if (number.isEmpty) return const SizedBox(width: 80);
+        return _buildNumButton(number);
       }).toList(),
     );
   }
 
-  Widget _buildNumButton(String num) {
+  Widget _buildNumButton(String number) {
     return GestureDetector(
-      onTap: () => _onNumTap(num),
+      onTap: () => _onNumTap(number),
       child: Container(
         width: 80,
         height: 80,
@@ -103,10 +114,13 @@ class _PinSetupPageState extends State<PinSetupPage> {
           shape: BoxShape.circle,
         ),
         child: Center(
-          child: num == 'del'
-              ? const Icon(Icons.backspace_outlined, color: AppColors.textPrimary)
+          child: number == 'del'
+              ? const Icon(
+                  Icons.backspace_outlined,
+                  color: AppColors.textPrimary,
+                )
               : Text(
-                  num,
+                  number,
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 24,
@@ -122,7 +136,9 @@ class _PinSetupPageState extends State<PinSetupPage> {
     setState(() {
       if (num == 'del') {
         if (_isConfirming) {
-          if (_confirmPin.isNotEmpty) _confirmPin = _confirmPin.substring(0, _confirmPin.length - 1);
+          if (_confirmPin.isNotEmpty) {
+            _confirmPin = _confirmPin.substring(0, _confirmPin.length - 1);
+          }
         } else {
           if (_pin.isNotEmpty) _pin = _pin.substring(0, _pin.length - 1);
         }

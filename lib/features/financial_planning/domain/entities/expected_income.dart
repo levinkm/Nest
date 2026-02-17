@@ -15,5 +15,6 @@ class ExpectedIncome with _$ExpectedIncome {
     @Default(true) bool isActive,
   }) = _ExpectedIncome;
 
-  factory ExpectedIncome.fromJson(Map<String, dynamic> json) => _$ExpectedIncomeFromJson(json);
+  factory ExpectedIncome.fromJson(Map<String, dynamic> json) =>
+      _$ExpectedIncomeFromJson(json);
 }

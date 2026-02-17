@@ -1,0 +1,25 @@
+#!/bin/sh
+# Pre-commit hook for Nest Finance App
+
+echo "🔍 Running pre-commit checks..."
+
+# Run Flutter analyze
+echo "📊 Running flutter analyze..."
+flutter analyze
+if [ $? -ne 0 ]; then
+  echo "❌ Flutter analyze found issues. Please fix them before committing."
+  exit 1
+fi
+
+# Run Dart format
+echo "🎨 Checking code formatting..."
+dart format --set-exit-if-changed lib/
+if [ $? -ne 0 ]; then
+  echo "❌ Code is not formatted. Running dart format..."
+  dart format lib/
+  echo "✅ Code formatted. Please review changes and commit again."
+  exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"
+exit 0

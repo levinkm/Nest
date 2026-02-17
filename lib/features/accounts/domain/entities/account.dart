@@ -6,7 +6,7 @@ part 'account.g.dart';
 @freezed
 class Account with _$Account {
   const Account._();
-  
+
   const factory Account({
     required String id,
     required String name,
@@ -21,9 +21,11 @@ class Account with _$Account {
 
   double get debtBalance => balance < 0 ? balance.abs() : 0.0;
   double get availableCredit => creditLimit - debtBalance;
-  double get utilizationPercentage => creditLimit > 0 ? (debtBalance / creditLimit) * 100 : 0;
+  double get utilizationPercentage =>
+      creditLimit > 0 ? (debtBalance / creditLimit) * 100 : 0;
   bool get isOverdrawn => balance < 0;
   double get balanceDifference => balance - recordedBalance;
 
-  factory Account.fromJson(Map<String, dynamic> json) => _$AccountFromJson(json);
+  factory Account.fromJson(Map<String, dynamic> json) =>
+      _$AccountFromJson(json);
 }

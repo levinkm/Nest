@@ -163,7 +163,7 @@ class _PlanningPageState extends State<PlanningPage> {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: item.isCompleted
-              ? AppColors.income.withOpacity(0.3)
+              ? AppColors.income.withValues(alpha: 0.3)
               : Colors.transparent,
         ),
       ),
@@ -199,11 +199,7 @@ class _PlanningPageState extends State<PlanningPage> {
                     onTap: () => _addNewItem(parentId: item.id),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.add,
-                          size: 16,
-                          color: AppColors.primary,
-                        ),
+                        Icon(Icons.add, size: 16, color: AppColors.primary),
                         const SizedBox(width: 4),
                         Text(
                           'Add sub-item',
@@ -233,11 +229,7 @@ class _PlanningPageState extends State<PlanningPage> {
                     onTap: () => _addNewItem(parentId: item.id),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.add,
-                          size: 16,
-                          color: AppColors.primary,
-                        ),
+                        Icon(Icons.add, size: 16, color: AppColors.primary),
                         const SizedBox(width: 4),
                         Text(
                           'Add sub-item',
@@ -318,11 +310,11 @@ class _PlanningPageState extends State<PlanningPage> {
     );
     // For parent items with children, show parent's own cost + child totals
     // For items without children, show their own costs
-    final totalEstimated = hasChildren 
-        ? (item.estimatedCost * item.quantity) + childEstimated 
+    final totalEstimated = hasChildren
+        ? (item.estimatedCost * item.quantity) + childEstimated
         : (item.estimatedCost * item.quantity);
-    final totalActual = hasChildren 
-        ? (item.actualCost * item.quantity) + childActual 
+    final totalActual = hasChildren
+        ? (item.actualCost * item.quantity) + childActual
         : (item.actualCost * item.quantity);
 
     return _ItemRowWidget(
@@ -429,8 +421,12 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.item.name);
-    _estimatedController = TextEditingController(text: widget.item.estimatedCost.toStringAsFixed(0));
-    _actualController = TextEditingController(text: widget.item.actualCost.toStringAsFixed(0));
+    _estimatedController = TextEditingController(
+      text: widget.item.estimatedCost.toStringAsFixed(0),
+    );
+    _actualController = TextEditingController(
+      text: widget.item.actualCost.toStringAsFixed(0),
+    );
     _notesController = TextEditingController(text: widget.item.notes);
   }
 
@@ -455,7 +451,9 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                 GestureDetector(
                   onTap: widget.onToggleExpand,
                   child: Icon(
-                    widget.isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right,
+                    widget.isExpanded
+                        ? Icons.keyboard_arrow_down
+                        : Icons.keyboard_arrow_right,
                     color: AppColors.textSecondary,
                     size: 20,
                   ),
@@ -466,8 +464,12 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
               GestureDetector(
                 onTap: widget.onToggle,
                 child: Icon(
-                  widget.item.isCompleted ? Icons.check_box : Icons.check_box_outline_blank,
-                  color: widget.item.isCompleted ? AppColors.income : AppColors.textSecondary,
+                  widget.item.isCompleted
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                  color: widget.item.isCompleted
+                      ? AppColors.income
+                      : AppColors.textSecondary,
                   size: 24,
                 ),
               ),
@@ -479,9 +481,12 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                     if (widget.item.quantity > 1)
                       Container(
                         margin: const EdgeInsets.only(right: 6),
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.2),
+                          color: AppColors.primary.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(3),
                         ),
                         child: Text(
@@ -501,7 +506,9 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                               style: TextStyle(
                                 color: AppColors.textPrimary,
                                 fontSize: widget.isChild ? 14 : 15,
-                                fontWeight: widget.isChild ? FontWeight.normal : FontWeight.w600,
+                                fontWeight: widget.isChild
+                                    ? FontWeight.normal
+                                    : FontWeight.w600,
                               ),
                               decoration: const InputDecoration(
                                 isDense: true,
@@ -510,20 +517,33 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                               ),
                               onSubmitted: (_) {
                                 if (_nameController.text.isNotEmpty) {
-                                  widget.onUpdate(widget.item.copyWith(name: _nameController.text));
+                                  widget.onUpdate(
+                                    widget.item.copyWith(
+                                      name: _nameController.text,
+                                    ),
+                                  );
                                 }
                                 setState(() => _isEditingName = false);
                               },
                             )
                           : GestureDetector(
-                              onLongPress: () => setState(() => _isEditingName = true),
+                              onLongPress: () =>
+                                  setState(() => _isEditingName = true),
                               child: Text(
-                                widget.item.name.isEmpty ? 'Untitled' : widget.item.name,
+                                widget.item.name.isEmpty
+                                    ? 'Untitled'
+                                    : widget.item.name,
                                 style: TextStyle(
-                                  color: widget.item.name.isEmpty ? AppColors.textSecondary : AppColors.textPrimary,
+                                  color: widget.item.name.isEmpty
+                                      ? AppColors.textSecondary
+                                      : AppColors.textPrimary,
                                   fontSize: widget.isChild ? 14 : 15,
-                                  fontWeight: widget.isChild ? FontWeight.normal : FontWeight.w600,
-                                  decoration: widget.item.isCompleted ? TextDecoration.lineThrough : null,
+                                  fontWeight: widget.isChild
+                                      ? FontWeight.normal
+                                      : FontWeight.w600,
+                                  decoration: widget.item.isCompleted
+                                      ? TextDecoration.lineThrough
+                                      : null,
                                 ),
                               ),
                             ),
@@ -538,7 +558,10 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                         controller: _estimatedController,
                         autofocus: true,
                         keyboardType: TextInputType.number,
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
                         textAlign: TextAlign.right,
                         decoration: const InputDecoration(
                           isDense: true,
@@ -546,17 +569,25 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                           border: InputBorder.none,
                         ),
                         onSubmitted: (_) {
-                          widget.onUpdate(widget.item.copyWith(
-                            estimatedCost: double.tryParse(_estimatedController.text) ?? 0,
-                          ));
+                          widget.onUpdate(
+                            widget.item.copyWith(
+                              estimatedCost:
+                                  double.tryParse(_estimatedController.text) ??
+                                  0,
+                            ),
+                          );
                           setState(() => _isEditingEstimated = false);
                         },
                       )
                     : GestureDetector(
-                        onLongPress: () => setState(() => _isEditingEstimated = true),
+                        onLongPress: () =>
+                            setState(() => _isEditingEstimated = true),
                         child: Text(
                           '${widget.currency} ${widget.totalEstimated.toStringAsFixed(0)}',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
                           textAlign: TextAlign.right,
                         ),
                       ),
@@ -570,7 +601,9 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                         autofocus: true,
                         keyboardType: TextInputType.number,
                         style: TextStyle(
-                          color: widget.totalActual > 0 ? AppColors.primary : AppColors.textSecondary,
+                          color: widget.totalActual > 0
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
                           fontSize: 13,
                         ),
                         textAlign: TextAlign.right,
@@ -580,20 +613,28 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                           border: InputBorder.none,
                         ),
                         onSubmitted: (_) {
-                          widget.onUpdate(widget.item.copyWith(
-                            actualCost: double.tryParse(_actualController.text) ?? 0,
-                          ));
+                          widget.onUpdate(
+                            widget.item.copyWith(
+                              actualCost:
+                                  double.tryParse(_actualController.text) ?? 0,
+                            ),
+                          );
                           setState(() => _isEditingActual = false);
                         },
                       )
                     : GestureDetector(
-                        onLongPress: () => setState(() => _isEditingActual = true),
+                        onLongPress: () =>
+                            setState(() => _isEditingActual = true),
                         child: Text(
                           '${widget.currency} ${widget.totalActual.toStringAsFixed(0)}',
                           style: TextStyle(
-                            color: widget.totalActual > 0 ? AppColors.primary : AppColors.textSecondary,
+                            color: widget.totalActual > 0
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
                             fontSize: 13,
-                            fontWeight: widget.totalActual > 0 ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight: widget.totalActual > 0
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                           ),
                           textAlign: TextAlign.right,
                         ),
@@ -601,7 +642,11 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
               ),
               if (widget.isChild)
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_horiz, color: AppColors.textSecondary, size: 20),
+                  icon: const Icon(
+                    Icons.more_horiz,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
                   color: AppColors.surface,
                   onSelected: (value) {
                     if (value == 'quantity') _showQuantityPicker(context);
@@ -614,9 +659,16 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                       value: 'quantity',
                       child: Row(
                         children: [
-                          Icon(Icons.filter_9_plus, size: 18, color: AppColors.textPrimary),
+                          Icon(
+                            Icons.filter_9_plus,
+                            size: 18,
+                            color: AppColors.textPrimary,
+                          ),
                           SizedBox(width: 8),
-                          Text('Quantity', style: TextStyle(color: AppColors.textPrimary)),
+                          Text(
+                            'Quantity',
+                            style: TextStyle(color: AppColors.textPrimary),
+                          ),
                         ],
                       ),
                     ),
@@ -624,9 +676,16 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                       value: 'note',
                       child: Row(
                         children: [
-                          Icon(Icons.note_add, size: 18, color: AppColors.textPrimary),
+                          Icon(
+                            Icons.note_add,
+                            size: 18,
+                            color: AppColors.textPrimary,
+                          ),
                           SizedBox(width: 8),
-                          Text('Add note', style: TextStyle(color: AppColors.textPrimary)),
+                          Text(
+                            'Add note',
+                            style: TextStyle(color: AppColors.textPrimary),
+                          ),
                         ],
                       ),
                     ),
@@ -634,9 +693,16 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                       value: 'tag',
                       child: Row(
                         children: [
-                          Icon(Icons.label_outline, size: 18, color: AppColors.textPrimary),
+                          Icon(
+                            Icons.label_outline,
+                            size: 18,
+                            color: AppColors.textPrimary,
+                          ),
                           SizedBox(width: 8),
-                          Text('Add tag', style: TextStyle(color: AppColors.textPrimary)),
+                          Text(
+                            'Add tag',
+                            style: TextStyle(color: AppColors.textPrimary),
+                          ),
                         ],
                       ),
                     ),
@@ -646,7 +712,10 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                         children: [
                           Icon(Icons.delete, size: 18, color: AppColors.error),
                           SizedBox(width: 8),
-                          Text('Delete', style: TextStyle(color: AppColors.error)),
+                          Text(
+                            'Delete',
+                            style: TextStyle(color: AppColors.error),
+                          ),
                         ],
                       ),
                     ),
@@ -654,7 +723,11 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                 )
               else
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: AppColors.textSecondary, size: 20),
+                  icon: const Icon(
+                    Icons.more_vert,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
                   color: AppColors.surface,
                   onSelected: (value) {
                     if (value == 'delete') widget.onDelete();
@@ -666,7 +739,10 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                         children: [
                           Icon(Icons.delete, size: 18, color: AppColors.error),
                           SizedBox(width: 8),
-                          Text('Delete', style: TextStyle(color: AppColors.error)),
+                          Text(
+                            'Delete',
+                            style: TextStyle(color: AppColors.error),
+                          ),
                         ],
                       ),
                     ),
@@ -674,7 +750,9 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                 ),
             ],
           ),
-          if (widget.item.tag != null || widget.item.notes.isNotEmpty || _isEditingNotes)
+          if (widget.item.tag != null ||
+              widget.item.notes.isNotEmpty ||
+              _isEditingNotes)
             Padding(
               padding: const EdgeInsets.only(top: 6, left: 36),
               child: Column(
@@ -682,7 +760,10 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                 children: [
                   if (widget.item.tag != null)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: _getTagColor(widget.item.tag!),
                         borderRadius: BorderRadius.circular(4),
@@ -698,29 +779,44 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                     ),
                   if (widget.item.notes.isNotEmpty || _isEditingNotes)
                     Padding(
-                      padding: EdgeInsets.only(top: widget.item.tag != null ? 4 : 0),
+                      padding: EdgeInsets.only(
+                        top: widget.item.tag != null ? 4 : 0,
+                      ),
                       child: _isEditingNotes
                           ? TextField(
                               controller: _notesController,
                               autofocus: true,
-                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
                               decoration: const InputDecoration(
                                 isDense: true,
                                 hintText: 'Add note...',
-                                hintStyle: TextStyle(color: AppColors.textSecondary),
+                                hintStyle: TextStyle(
+                                  color: AppColors.textSecondary,
+                                ),
                                 contentPadding: EdgeInsets.zero,
                                 border: InputBorder.none,
                               ),
                               onSubmitted: (_) {
-                                widget.onUpdate(widget.item.copyWith(notes: _notesController.text));
+                                widget.onUpdate(
+                                  widget.item.copyWith(
+                                    notes: _notesController.text,
+                                  ),
+                                );
                                 setState(() => _isEditingNotes = false);
                               },
                             )
                           : GestureDetector(
-                              onLongPress: () => setState(() => _isEditingNotes = true),
+                              onLongPress: () =>
+                                  setState(() => _isEditingNotes = true),
                               child: Text(
                                 widget.item.notes,
-                                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                     ),
@@ -736,15 +832,15 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
     switch (tag.toLowerCase()) {
       case 'phase 1':
       case 'high':
-        return AppColors.error.withOpacity(0.3);
+        return AppColors.error.withValues(alpha: 0.3);
       case 'phase 2':
       case 'medium':
-        return AppColors.warning.withOpacity(0.3);
+        return AppColors.warning.withValues(alpha: 0.3);
       case 'phase 3':
       case 'low':
-        return AppColors.income.withOpacity(0.3);
+        return AppColors.income.withValues(alpha: 0.3);
       default:
-        return AppColors.primary.withOpacity(0.3);
+        return AppColors.primary.withValues(alpha: 0.3);
     }
   }
 
@@ -781,25 +877,34 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: ['Phase 1', 'Phase 2', 'Phase 3', 'High', 'Medium', 'Low']
-                    .map((tag) => GestureDetector(
-                          onTap: () {
-                            widget.onUpdate(widget.item.copyWith(tag: tag));
-                            Navigator.pop(context);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: _getTagColor(tag),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              tag,
-                              style: const TextStyle(color: AppColors.textPrimary, fontSize: 12),
+                children:
+                    ['Phase 1', 'Phase 2', 'Phase 3', 'High', 'Medium', 'Low']
+                        .map(
+                          (tag) => GestureDetector(
+                            onTap: () {
+                              widget.onUpdate(widget.item.copyWith(tag: tag));
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getTagColor(tag),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                tag,
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
                           ),
-                        ))
-                    .toList(),
+                        )
+                        .toList(),
               ),
             ),
           ],
@@ -811,11 +916,17 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                 widget.onUpdate(widget.item.copyWith(tag: ''));
                 Navigator.pop(context);
               },
-              child: const Text('Remove', style: TextStyle(color: AppColors.error)),
+              child: const Text(
+                'Remove',
+                style: TextStyle(color: AppColors.error),
+              ),
             ),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -824,7 +935,10 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
                 Navigator.pop(context);
               }
             },
-            child: const Text('Save', style: TextStyle(color: AppColors.primary)),
+            child: const Text(
+              'Save',
+              style: TextStyle(color: AppColors.primary),
+            ),
           ),
         ],
       ),
@@ -836,35 +950,40 @@ class _ItemRowWidgetState extends State<_ItemRowWidget> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Quantity', style: TextStyle(color: AppColors.textPrimary)),
+        title: const Text(
+          'Quantity',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
         content: Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [1, 2, 3, 4, 5, 10]
-              .map((qty) => GestureDetector(
-                    onTap: () {
-                      widget.onUpdate(widget.item.copyWith(quantity: qty));
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
+              .map(
+                (qty) => GestureDetector(
+                  onTap: () {
+                    widget.onUpdate(widget.item.copyWith(quantity: qty));
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: widget.item.quantity == qty
+                          ? AppColors.primary
+                          : AppColors.primary.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'x$qty',
+                      style: TextStyle(
                         color: widget.item.quantity == qty
-                            ? AppColors.primary
-                            : AppColors.primary.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'x$qty',
-                        style: TextStyle(
-                          color: widget.item.quantity == qty
-                              ? Colors.white
-                              : AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                            ? Colors.white
+                            : AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ))
+                  ),
+                ),
+              )
               .toList(),
         ),
       ),

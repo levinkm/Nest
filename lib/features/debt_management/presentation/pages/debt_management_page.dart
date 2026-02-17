@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -27,20 +28,26 @@ class _DebtManagementPageState extends State<DebtManagementPage> {
   Future<void> _loadDebts() async {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString('debts') ?? '[]';
-    
+
     // Load from SharedPreferences
     final prefsDebts = List<Map<String, dynamic>>.from(jsonDecode(data));
-    
+
     // Load from database
     final db = LocalDatabase();
     final dbDebts = await db.getDebts();
-    
-    print('Loading debts - SharedPrefs: ${prefsDebts.length}, Database: ${dbDebts.length}');
-    
+
+    if (kDebugMode) {
+      print(
+        'Loading debts - SharedPrefs: ${prefsDebts.length}, Database: ${dbDebts.length}',
+      );
+    }
+
     // Combine both sources
     final allDebts = [...prefsDebts];
     for (var dbDebt in dbDebts) {
-      print('DB Debt: ${dbDebt['name']} - ${dbDebt['principal']}');
+      if (kDebugMode) {
+        print('DB Debt: ${dbDebt['name']} - ${dbDebt['principal']}');
+      }
       if (!allDebts.any((d) => d['id'] == dbDebt['id'])) {
         allDebts.add({
           'id': dbDebt['id'],
@@ -58,9 +65,11 @@ class _DebtManagementPageState extends State<DebtManagementPage> {
         });
       }
     }
-    
-    print('Total debts loaded: ${allDebts.length}');
-    
+
+    if (kDebugMode) {
+      print('Total debts loaded: ${allDebts.length}');
+    }
+
     setState(() {
       _debts = allDebts;
     });
@@ -548,13 +557,6 @@ class _DebtManagementPageState extends State<DebtManagementPage> {
       backgroundColor: Colors.transparent,
       builder: (context) => PaymentHistoryBottomSheet(debt: _debts[index]),
     );
-  }
-
-  void _markAsPaid(int index) {
-    setState(() {
-      _debts[index]['isActive'] = !_debts[index]['isActive'];
-    });
-    _saveDebts();
   }
 }
 

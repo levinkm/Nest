@@ -189,16 +189,16 @@ class _PinLoginPageState extends State<PinLoginPage> {
   Widget _buildNumRow(List<String> numbers) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: numbers.map((num) {
-        if (num.isEmpty) return const SizedBox(width: 80);
-        return _buildNumButton(num);
+      children: numbers.map((number) {
+        if (number.isEmpty) return const SizedBox(width: 80);
+        return _buildNumButton(number);
       }).toList(),
     );
   }
 
-  Widget _buildNumButton(String num) {
+  Widget _buildNumButton(String number) {
     return GestureDetector(
-      onTap: () => _onNumTap(num),
+      onTap: () => _onNumTap(number),
       child: Container(
         width: 80,
         height: 80,
@@ -207,13 +207,13 @@ class _PinLoginPageState extends State<PinLoginPage> {
           shape: BoxShape.circle,
         ),
         child: Center(
-          child: num == 'del'
+          child: number == 'del'
               ? const Icon(
                   Icons.backspace_outlined,
                   color: AppColors.textPrimary,
                 )
               : Text(
-                  num,
+                  number,
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 24,

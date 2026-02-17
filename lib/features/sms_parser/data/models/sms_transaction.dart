@@ -8,7 +8,7 @@ part 'sms_transaction.g.dart';
 @freezed
 class SmsTransaction with _$SmsTransaction {
   const SmsTransaction._();
-  
+
   const factory SmsTransaction({
     required double amount,
     required String category,
@@ -25,8 +25,9 @@ class SmsTransaction with _$SmsTransaction {
     String? counterparty,
   }) = _SmsTransaction;
 
-  factory SmsTransaction.fromJson(Map<String, dynamic> json) => _$SmsTransactionFromJson(json);
-  
+  factory SmsTransaction.fromJson(Map<String, dynamic> json) =>
+      _$SmsTransactionFromJson(json);
+
   Transaction toTransaction() {
     return Transaction(
       id: const Uuid().v4(),

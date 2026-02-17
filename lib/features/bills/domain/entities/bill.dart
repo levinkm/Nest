@@ -6,7 +6,7 @@ part 'bill.g.dart';
 @freezed
 class Bill with _$Bill {
   const Bill._();
-  
+
   const factory Bill({
     required String id,
     required String name,
@@ -27,7 +27,7 @@ class Bill with _$Bill {
   }) = _Bill;
 
   bool get isOverdue => status == 'upcoming' && DateTime.now().isAfter(dueDate);
-  
+
   int get daysUntilDue => dueDate.difference(DateTime.now()).inDays;
 
   factory Bill.fromJson(Map<String, dynamic> json) => _$BillFromJson(json);

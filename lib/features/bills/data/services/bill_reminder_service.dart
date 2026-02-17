@@ -56,16 +56,18 @@ class BillReminderService {
     return reminders;
   }
 
-  static Future<Map<String, dynamic>> getBalanceAwareReminder(String billId) async {
+  static Future<Map<String, dynamic>> getBalanceAwareReminder(
+    String billId,
+  ) async {
     final db = LocalDatabase();
     final bills = await db.getBills();
     final bill = bills.firstWhere((b) => b['id'] == billId);
-    
+
     final accounts = await db.getAccounts();
     final mpesaAccount = accounts.firstWhere((a) => a['id'] == 'mpesa_default');
     final balance = mpesaAccount['balance'] ?? 0.0;
     final billAmount = bill['amount'] as double;
-    
+
     if (balance < billAmount) {
       final shortage = billAmount - balance;
       return {
@@ -74,7 +76,7 @@ class BillReminderService {
         'message': 'You are short by KSh ${shortage.toStringAsFixed(0)}',
       };
     }
-    
+
     return {'hasShortage': false};
   }
 }

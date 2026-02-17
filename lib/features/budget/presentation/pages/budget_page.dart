@@ -5,7 +5,6 @@ import '../../data/models/budget_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_helper.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../screens/budget_details_screen.dart';
 import '../../../transactions/presentation/bloc/transaction_bloc.dart';
 import '../../../transactions/data/datasources/local_database.dart';
 
@@ -44,19 +43,21 @@ class _BudgetPageState extends State<BudgetPage> {
         bool hasChanges = false;
         for (var i = 0; i < _budgets.length; i++) {
           final budget = _budgets[i];
-          
+
           // Get current month/period start date
           final now = DateTime.now();
           DateTime periodStart;
           DateTime periodEnd;
-          
+
           if (budget.period == 'Monthly') {
             periodStart = DateTime(now.year, now.month, 1);
             periodEnd = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
           } else if (budget.period == 'Weekly') {
             final weekday = now.weekday;
             periodStart = now.subtract(Duration(days: weekday - 1));
-            periodEnd = periodStart.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+            periodEnd = periodStart.add(
+              const Duration(days: 6, hours: 23, minutes: 59, seconds: 59),
+            );
           } else if (budget.period == 'Daily') {
             periodStart = DateTime(now.year, now.month, now.day);
             periodEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
@@ -64,10 +65,12 @@ class _BudgetPageState extends State<BudgetPage> {
             periodStart = DateTime(now.year, 1, 1);
             periodEnd = DateTime(now.year, 12, 31, 23, 59, 59);
           }
-          
+
           final categoryTransactions = transactions.where((t) {
             final isInPeriod =
-                t.date.isAfter(periodStart.subtract(const Duration(seconds: 1))) &&
+                t.date.isAfter(
+                  periodStart.subtract(const Duration(seconds: 1)),
+                ) &&
                 t.date.isBefore(periodEnd.add(const Duration(seconds: 1)));
             final isExpense = t.type.toLowerCase() == 'expense';
             final matchesCategory =
@@ -274,8 +277,8 @@ class _BudgetPageState extends State<BudgetPage> {
                 ),
                 decoration: BoxDecoration(
                   color: progress >= 1.0
-                      ? AppColors.error.withOpacity(0.2)
-                      : AppColors.success.withOpacity(0.2),
+                      ? AppColors.error.withValues(alpha: 0.2)
+                      : AppColors.success.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -447,7 +450,7 @@ class _BudgetPageState extends State<BudgetPage> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.error.withOpacity(0.1),
+                        color: AppColors.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -498,11 +501,18 @@ class _BudgetPageState extends State<BudgetPage> {
                 children: [
                   Text(
                     budget.category ?? budget.name,
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -517,21 +527,39 @@ class _BudgetPageState extends State<BudgetPage> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [AppColors.cardGradientStart, AppColors.cardGradientEnd],
+                          colors: [
+                            AppColors.cardGradientStart,
+                            AppColors.cardGradientEnd,
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
                         children: [
-                          Text('$_currency ${budget.spent.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textPrimary, fontSize: 36, fontWeight: FontWeight.bold)),
-                          Text('of $_currency ${budget.limit.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 16)),
+                          Text(
+                            '$_currency ${budget.spent.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'of $_currency ${budget.limit.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 16,
+                            ),
+                          ),
                           const SizedBox(height: 16),
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: LinearProgressIndicator(
                               value: (budget.percentage / 100).clamp(0.0, 1.0),
                               backgroundColor: AppColors.surfaceLight,
-                              color: budget.isOverBudget ? AppColors.error : AppColors.success,
+                              color: budget.isOverBudget
+                                  ? AppColors.error
+                                  : AppColors.success,
                               minHeight: 10,
                             ),
                           ),
@@ -541,8 +569,14 @@ class _BudgetPageState extends State<BudgetPage> {
                     const SizedBox(height: 24),
                     _buildDetailRow('Period', budget.period),
                     _buildDetailRow('Days Left', '${budget.daysLeft} days'),
-                    _buildDetailRow('Daily Budget', '$_currency ${budget.dailyBudget.toStringAsFixed(0)}'),
-                    _buildDetailRow('Remaining', '$_currency ${budget.remaining.toStringAsFixed(0)}'),
+                    _buildDetailRow(
+                      'Daily Budget',
+                      '$_currency ${budget.dailyBudget.toStringAsFixed(0)}',
+                    ),
+                    _buildDetailRow(
+                      'Remaining',
+                      '$_currency ${budget.remaining.toStringAsFixed(0)}',
+                    ),
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
@@ -554,9 +588,17 @@ class _BudgetPageState extends State<BudgetPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        child: const Text('Update Spent', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          'Update Spent',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -575,8 +617,21 @@ class _BudgetPageState extends State<BudgetPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-          Text(value, style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -590,7 +645,7 @@ class _BudgetPageState extends State<BudgetPage> {
           Icon(
             Icons.account_balance_wallet_outlined,
             size: 80,
-            color: AppColors.textSecondary.withOpacity(0.5),
+            color: AppColors.textSecondary.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           const Text(

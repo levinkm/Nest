@@ -14,5 +14,6 @@ class SmsSenderConfig with _$SmsSenderConfig {
     required DateTime createdAt,
   }) = _SmsSenderConfig;
 
-  factory SmsSenderConfig.fromJson(Map<String, dynamic> json) => _$SmsSenderConfigFromJson(json);
+  factory SmsSenderConfig.fromJson(Map<String, dynamic> json) =>
+      _$SmsSenderConfigFromJson(json);
 }

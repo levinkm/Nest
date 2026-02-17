@@ -7,47 +7,90 @@ import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 
 class BillSuggestionsDialog {
-  static Future<void> show(BuildContext context, List<Transaction> transactions) async {
-    final suggestions = await BillDetectionService.detectRecurringBills(transactions);
-    
+  static Future<void> show(
+    BuildContext context,
+    List<Transaction> transactions,
+  ) async {
+    final suggestions = await BillDetectionService.detectRecurringBills(
+      transactions,
+    );
+
     if (suggestions.isEmpty || !context.mounted) return;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('💡 Recurring Bills Detected', style: TextStyle(color: AppColors.textPrimary)),
+        title: const Text(
+          '💡 Recurring Bills Detected',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('We found recurring payments. Add them as bills?', style: TextStyle(color: AppColors.textSecondary)),
+              const Text(
+                'We found recurring payments. Add them as bills?',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
               const SizedBox(height: 16),
               ...suggestions.map((s) => _buildSuggestionCard(context, s)),
             ],
           ),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Later'))],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Later'),
+          ),
+        ],
       ),
     );
   }
 
-  static Widget _buildSuggestionCard(BuildContext context, Map<String, dynamic> suggestion) {
+  static Widget _buildSuggestionCard(
+    BuildContext context,
+    Map<String, dynamic> suggestion,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(suggestion['merchant'], style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+          Text(
+            suggestion['merchant'],
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text('KSh ${NumberFormat('#,##0').format(suggestion['amount'])} • ${suggestion['frequency']}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-          Text('Detected ${suggestion['transactionCount']} times', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+          Text(
+            'KSh ${NumberFormat('#,##0').format(suggestion['amount'])} • ${suggestion['frequency']}',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+          Text(
+            'Detected ${suggestion['transactionCount']} times',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+            ),
+          ),
           const SizedBox(height: 8),
           ElevatedButton(
             onPressed: () => _addBill(context, suggestion),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, minimumSize: const Size(double.infinity, 36)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              minimumSize: const Size(double.infinity, 36),
+            ),
             child: const Text('Add as Bill'),
           ),
         ],
@@ -55,10 +98,32 @@ class BillSuggestionsDialog {
     );
   }
 
-  static Future<void> _addBill(BuildContext context, Map<String, dynamic> suggestion) async {
+  static Future<void> _addBill(
+    BuildContext context,
+    Map<String, dynamic> suggestion,
+  ) async {
     final db = LocalDatabase();
+
+    // Check if bill already exists for this merchant
+    final existingBills = await db.getBills();
+    final merchant = suggestion['merchant'] as String;
+    final isDuplicate = existingBills.any(
+      (b) =>
+          b['merchant'] != null &&
+          (b['merchant'] as String).toLowerCase() == merchant.toLowerCase(),
+    );
+
+    if (isDuplicate) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$merchant is already added as a bill')),
+        );
+      }
+      return;
+    }
+
     final lastDate = suggestion['lastDate'] as DateTime;
-    
+
     DateTime nextDue;
     if (suggestion['frequency'] == 'monthly') {
       nextDue = DateTime(lastDate.year, lastDate.month + 1, lastDate.day);
@@ -81,7 +146,9 @@ class BillSuggestionsDialog {
     });
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Added ${suggestion['merchant']} as a bill')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Added ${suggestion['merchant']} as a bill')),
+      );
     }
   }
 }

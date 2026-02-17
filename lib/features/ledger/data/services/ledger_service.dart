@@ -40,36 +40,40 @@ class LedgerService {
       }
 
       // Add main transaction entry
-      entries.add(LedgerEntry(
-        id: uuid.v4(),
-        transactionId: txn.id,
-        accountId: accountId,
-        date: txn.date,
-        description: txn.description,
-        debit: debit,
-        credit: credit,
-        balance: runningBalance,
-        fee: 0.0,
-        category: txn.category,
-        reference: txn.transactionId,
-      ));
-
-      // Add fee entry if applicable
-      if (txn.fee > 0) {
-        runningBalance -= txn.fee;
-        entries.add(LedgerEntry(
+      entries.add(
+        LedgerEntry(
           id: uuid.v4(),
           transactionId: txn.id,
           accountId: accountId,
           date: txn.date,
-          description: 'Transaction Fee - ${txn.description}',
-          debit: txn.fee,
-          credit: 0.0,
+          description: txn.description,
+          debit: debit,
+          credit: credit,
           balance: runningBalance,
-          fee: txn.fee,
-          category: 'Fees',
+          fee: 0.0,
+          category: txn.category,
           reference: txn.transactionId,
-        ));
+        ),
+      );
+
+      // Add fee entry if applicable
+      if (txn.fee > 0) {
+        runningBalance -= txn.fee;
+        entries.add(
+          LedgerEntry(
+            id: uuid.v4(),
+            transactionId: txn.id,
+            accountId: accountId,
+            date: txn.date,
+            description: 'Transaction Fee - ${txn.description}',
+            debit: txn.fee,
+            credit: 0.0,
+            balance: runningBalance,
+            fee: txn.fee,
+            category: 'Fees',
+            reference: txn.transactionId,
+          ),
+        );
       }
     }
 

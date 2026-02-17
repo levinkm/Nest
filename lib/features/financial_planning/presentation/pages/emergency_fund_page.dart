@@ -112,7 +112,10 @@ class _EmergencyFundPageState extends State<EmergencyFundPage> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.all(Radius.circular(16)),
               gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)],
+                colors: [
+                  AppColors.primary,
+                  AppColors.primary.withValues(alpha: 0.7),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -382,7 +385,11 @@ class _TransactionBottomSheetState extends State<_TransactionBottomSheet> {
               onPressed: () {
                 final amount = double.tryParse(_amountController.text) ?? 0;
                 if (amount > 0) {
-                  widget.onSave(amount, _noteController.text, _accountController.text);
+                  widget.onSave(
+                    amount,
+                    _noteController.text,
+                    _accountController.text,
+                  );
                   Navigator.pop(context);
                 }
               },

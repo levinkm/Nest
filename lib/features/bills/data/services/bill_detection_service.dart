@@ -1,6 +1,5 @@
 import '../../../transactions/domain/entities/transaction.dart';
 import '../../../transactions/data/datasources/local_database.dart';
-import 'package:uuid/uuid.dart';
 import 'dart:developer' as developer;
 
 class BillDetectionService {
@@ -10,12 +9,20 @@ class BillDetectionService {
   static Future<List<Map<String, dynamic>>> detectRecurringBills(
     List<Transaction> transactions,
   ) async {
+    final db = LocalDatabase();
+    final existingBills = await db.getBills();
+    final existingMerchants = existingBills
+        .where((b) => b['merchant'] != null)
+        .map((b) => (b['merchant'] as String).toLowerCase())
+        .toSet();
+
     final suggestions = <Map<String, dynamic>>[];
     final merchantGroups = <String, List<Transaction>>{};
 
     for (var t in transactions) {
       if (t.type == 'expense' && t.toAccountId != null) {
         final merchant = t.toAccountId!;
+        if (existingMerchants.contains(merchant.toLowerCase())) continue;
         merchantGroups.putIfAbsent(merchant, () => []).add(t);
       }
     }
@@ -30,7 +37,9 @@ class BillDetectionService {
 
       final amounts = txns.map((t) => t.amount).toList();
       final avgAmount = amounts.reduce((a, b) => a + b) / amounts.length;
-      final isConsistentAmount = amounts.every((a) => (a - avgAmount).abs() < avgAmount * 0.1);
+      final isConsistentAmount = amounts.every(
+        (a) => (a - avgAmount).abs() < avgAmount * 0.1,
+      );
 
       final intervals = <int>[];
       for (int i = 1; i < txns.length; i++) {
@@ -82,7 +91,7 @@ class BillDetectionService {
 
       // Handle different payment scenarios
       final totalPaid = matches.fold<double>(0.0, (sum, t) => sum + t.amount);
-      
+
       if (_isFullPayment(totalPaid, billAmount)) {
         // Full payment (single or multiple transactions)
         await db.markBillAsPaid(billId, matches.first.id, matches.first.date);
@@ -93,7 +102,9 @@ class BillDetectionService {
           'status': 'partial',
           'paidTransactionId': matches.map((t) => t.id).join(','),
         });
-        developer.log('⚠ Partial payment: ${billData['name']} (${totalPaid}/${billAmount})');
+        developer.log(
+          '⚠ Partial payment: ${billData['name']} ($totalPaid/$billAmount)',
+        );
       }
     }
   }
@@ -105,18 +116,18 @@ class BillDetectionService {
     String? merchant,
   ) {
     final matches = <Transaction>[];
-    
+
     for (var txn in transactions) {
       if (txn.type != 'expense') continue;
 
       final daysDiff = txn.date.difference(dueDate).inDays.abs();
       final amountDiff = (txn.amount - billAmount).abs();
       final amountTolerance = billAmount * amountTolerancePercent;
-      
+
       final isWithinDateWindow = daysDiff <= daysTolerance;
       final isAmountMatch = amountDiff <= amountTolerance;
-      final isMerchantMatch = merchant == null || 
-                              _fuzzyMerchantMatch(txn.toAccountId, merchant);
+      final isMerchantMatch =
+          merchant == null || _fuzzyMerchantMatch(txn.toAccountId, merchant);
 
       if (isWithinDateWindow && isAmountMatch && isMerchantMatch) {
         matches.add(txn);
@@ -128,26 +139,28 @@ class BillDetectionService {
 
   static bool _fuzzyMerchantMatch(String? txnMerchant, String billMerchant) {
     if (txnMerchant == null) return false;
-    
+
     final txnLower = txnMerchant.toLowerCase();
     final billLower = billMerchant.toLowerCase();
-    
+
     // Exact match
     if (txnLower == billLower) return true;
-    
+
     // Contains match
-    if (txnLower.contains(billLower) || billLower.contains(txnLower)) return true;
-    
+    if (txnLower.contains(billLower) || billLower.contains(txnLower)) {
+      return true;
+    }
+
     // Remove common words and check
     final commonWords = ['ltd', 'limited', 'co', 'company', 'inc'];
     var txnClean = txnLower;
     var billClean = billLower;
-    
+
     for (var word in commonWords) {
       txnClean = txnClean.replaceAll(word, '').trim();
       billClean = billClean.replaceAll(word, '').trim();
     }
-    
+
     return txnClean == billClean;
   }
 

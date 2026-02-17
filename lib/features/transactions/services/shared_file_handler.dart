@@ -12,7 +12,7 @@ class SharedFileHandler {
     try {
       final filePath = file.path;
       final fileExtension = filePath.split('.').last.toLowerCase();
-      
+
       if (fileExtension == 'csv') {
         return await _handleCsvFile(File(filePath));
       } else if (fileExtension == 'pdf') {
@@ -28,10 +28,7 @@ class SharedFileHandler {
         );
       }
     } catch (e) {
-      return SharedFileResult(
-        success: false,
-        error: e.toString(),
-      );
+      return SharedFileResult(success: false, error: e.toString());
     }
   }
 
@@ -48,9 +45,15 @@ class SharedFileHandler {
     }
   }
 
-  Future<SharedFileResult> handlePdfWithPassword(String filePath, String password) async {
+  Future<SharedFileResult> handlePdfWithPassword(
+    String filePath,
+    String password,
+  ) async {
     try {
-      final transactions = await _importService.importFromPdf(File(filePath), password);
+      final transactions = await _importService.importFromPdf(
+        File(filePath),
+        password,
+      );
       return await _importTransactions(transactions);
     } catch (e) {
       return SharedFileResult(
@@ -60,17 +63,20 @@ class SharedFileHandler {
     }
   }
 
-  Future<SharedFileResult> _importTransactions(List<Transaction> transactions) async {
+  Future<SharedFileResult> _importTransactions(
+    List<Transaction> transactions,
+  ) async {
     int imported = 0;
     int duplicates = 0;
 
     for (final transaction in transactions) {
-      final existing = await _database.database.then((db) => 
-        db.query('transactions', 
-          where: 'transactionId = ?', 
+      final existing = await _database.database.then(
+        (db) => db.query(
+          'transactions',
+          where: 'transactionId = ?',
           whereArgs: [transaction.transactionId],
-          limit: 1
-        )
+          limit: 1,
+        ),
       );
 
       if (existing.isEmpty) {

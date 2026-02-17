@@ -9,8 +9,10 @@ part 'transaction_bloc.freezed.dart';
 @freezed
 class TransactionEvent with _$TransactionEvent {
   const factory TransactionEvent.loadTransactions() = LoadTransactions;
-  const factory TransactionEvent.addTransaction(Transaction transaction) = AddTransaction;
-  const factory TransactionEvent.deleteTransaction(String id) = DeleteTransaction;
+  const factory TransactionEvent.addTransaction(Transaction transaction) =
+      AddTransaction;
+  const factory TransactionEvent.deleteTransaction(String id) =
+      DeleteTransaction;
 }
 
 // States
@@ -18,7 +20,8 @@ class TransactionEvent with _$TransactionEvent {
 class TransactionState with _$TransactionState {
   const factory TransactionState.initial() = TransactionInitial;
   const factory TransactionState.loading() = TransactionLoading;
-  const factory TransactionState.loaded(List<Transaction> transactions) = TransactionLoaded;
+  const factory TransactionState.loaded(List<Transaction> transactions) =
+      TransactionLoaded;
   const factory TransactionState.error(String message) = TransactionError;
 }
 
@@ -32,7 +35,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     on<DeleteTransaction>(_onDeleteTransaction);
   }
 
-  Future<void> _onLoadTransactions(LoadTransactions event, Emitter<TransactionState> emit) async {
+  Future<void> _onLoadTransactions(
+    LoadTransactions event,
+    Emitter<TransactionState> emit,
+  ) async {
     emit(const TransactionState.loading());
     try {
       final transactions = await repository.getTransactions();
@@ -42,7 +48,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     }
   }
 
-  Future<void> _onAddTransaction(AddTransaction event, Emitter<TransactionState> emit) async {
+  Future<void> _onAddTransaction(
+    AddTransaction event,
+    Emitter<TransactionState> emit,
+  ) async {
     try {
       await repository.addTransaction(event.transaction);
       add(const TransactionEvent.loadTransactions());
@@ -51,7 +60,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     }
   }
 
-  Future<void> _onDeleteTransaction(DeleteTransaction event, Emitter<TransactionState> emit) async {
+  Future<void> _onDeleteTransaction(
+    DeleteTransaction event,
+    Emitter<TransactionState> emit,
+  ) async {
     try {
       await repository.deleteTransaction(event.id);
       add(const TransactionEvent.loadTransactions());

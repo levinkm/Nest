@@ -36,7 +36,7 @@ class AccountBalanceService {
   static Future<Map<String, double>> getMpesaBalances() async {
     final db = LocalDatabase();
     final account = await db.getAccount('mpesa_default');
-    
+
     if (account == null) {
       return {'balance': 0.0, 'creditLimit': 0.0, 'debtBalance': 0.0};
     }
@@ -55,11 +55,13 @@ class AccountBalanceService {
 
   static Future<void> updateFulizaLimit(double limit) async {
     final db = LocalDatabase();
-    await db.database.then((database) => database.update(
-      'accounts',
-      {'creditLimit': limit, 'updatedAt': DateTime.now().toIso8601String()},
-      where: 'id = ?',
-      whereArgs: ['mpesa_default'],
-    ));
+    await db.database.then(
+      (database) => database.update(
+        'accounts',
+        {'creditLimit': limit, 'updatedAt': DateTime.now().toIso8601String()},
+        where: 'id = ?',
+        whereArgs: ['mpesa_default'],
+      ),
+    );
   }
 }

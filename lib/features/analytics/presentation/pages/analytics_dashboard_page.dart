@@ -33,19 +33,25 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
 
   Future<void> _loadAnalytics() async {
     setState(() => _loading = true);
-    
+
     final db = LocalDatabase();
     final transactions = await db.getTransactions();
-    
+
     final aggregation = await AccountAggregationService.getAggregatedBalances();
     final topMerchants = TransactionAnalytics.getTopMerchants(transactions);
-    final recurring = TransactionAnalytics.detectRecurringPayments(transactions);
-    final paymentMethods = TransactionAnalytics.getPaymentMethodBreakdown(transactions);
+    final recurring = TransactionAnalytics.detectRecurringPayments(
+      transactions,
+    );
+    final paymentMethods = TransactionAnalytics.getPaymentMethodBreakdown(
+      transactions,
+    );
     final dailyLimit = TransactionAnalytics.getDailyLimitUsage(transactions);
     final failed = TransactionAnalytics.getFailedTransactions(transactions);
-    final international = TransactionAnalytics.getInternationalTransactions(transactions);
+    final international = TransactionAnalytics.getInternationalTransactions(
+      transactions,
+    );
     final p2p = TransactionAnalytics.getP2PLending(transactions);
-    
+
     setState(() {
       _aggregation = aggregation;
       _topMerchants = topMerchants;
@@ -66,10 +72,15 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
-        title: const Text('Analytics', style: TextStyle(color: AppColors.textPrimary)),
+        title: const Text(
+          'Analytics',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
           : RefreshIndicator(
               onRefresh: _loadAnalytics,
               child: ListView(
@@ -195,7 +206,7 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
                     dotData: const FlDotData(show: true),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: AppColors.expense.withOpacity(0.1),
+                      color: AppColors.expense.withValues(alpha: 0.1),
                     ),
                   ),
                 ],
@@ -365,13 +376,41 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Total Balances', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            'Total Balances',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 12),
-          _buildRow('Cash', _aggregation['totalCash'] ?? 0.0, AppColors.income, fmt),
-          _buildRow('Investments', _aggregation['totalInvestments'] ?? 0.0, AppColors.primary, fmt),
-          _buildRow('Debt', _aggregation['totalDebt'] ?? 0.0, AppColors.error, fmt),
+          _buildRow(
+            'Cash',
+            _aggregation['totalCash'] ?? 0.0,
+            AppColors.income,
+            fmt,
+          ),
+          _buildRow(
+            'Investments',
+            _aggregation['totalInvestments'] ?? 0.0,
+            AppColors.primary,
+            fmt,
+          ),
+          _buildRow(
+            'Debt',
+            _aggregation['totalDebt'] ?? 0.0,
+            AppColors.error,
+            fmt,
+          ),
           const Divider(color: AppColors.border, height: 24),
-          _buildRow('Net Worth', _aggregation['netWorth'] ?? 0.0, AppColors.textPrimary, fmt, bold: true),
+          _buildRow(
+            'Net Worth',
+            _aggregation['netWorth'] ?? 0.0,
+            AppColors.textPrimary,
+            fmt,
+            bold: true,
+          ),
         ],
       ),
     );
@@ -389,10 +428,19 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Daily Transaction Limit', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            'Daily Transaction Limit',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 12),
-          Text('KSh ${fmt.format(_dailyLimit['used'] ?? 0)} / ${fmt.format(_dailyLimit['limit'] ?? 0)}', 
-            style: const TextStyle(color: AppColors.textSecondary)),
+          Text(
+            'KSh ${fmt.format(_dailyLimit['used'] ?? 0)} / ${fmt.format(_dailyLimit['limit'] ?? 0)}',
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
           const SizedBox(height: 8),
           LinearProgressIndicator(
             value: percentage / 100,
@@ -400,7 +448,13 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
             color: percentage > 80 ? AppColors.error : AppColors.primary,
           ),
           const SizedBox(height: 8),
-          Text('${percentage.toStringAsFixed(1)}% used', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          Text(
+            '${percentage.toStringAsFixed(1)}% used',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
+          ),
         ],
       ),
     );
@@ -417,22 +471,44 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Top Merchants', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            'Top Merchants',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 12),
           if (merchants.isEmpty)
-            const Text('No merchant data', style: TextStyle(color: AppColors.textSecondary))
+            const Text(
+              'No merchant data',
+              style: TextStyle(color: AppColors.textSecondary),
+            )
           else
-            ...merchants.map((m) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(child: Text(m['name'], style: const TextStyle(color: AppColors.textPrimary))),
-                  Text('${m['count']}x • KSh ${NumberFormat('#,##0').format(m['total'])}', 
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                ],
+            ...merchants.map(
+              (m) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        m['name'],
+                        style: const TextStyle(color: AppColors.textPrimary),
+                      ),
+                    ),
+                    Text(
+                      '${m['count']}x • KSh ${NumberFormat('#,##0').format(m['total'])}',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
         ],
       ),
     );
@@ -448,22 +524,42 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Recurring Payments', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            'Recurring Payments',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 12),
           if (_recurring.isEmpty)
-            const Text('No recurring payments detected', style: TextStyle(color: AppColors.textSecondary))
+            const Text(
+              'No recurring payments detected',
+              style: TextStyle(color: AppColors.textSecondary),
+            )
           else
-            ..._recurring.map((r) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(r['merchant'], style: const TextStyle(color: AppColors.textPrimary)),
-                  Text('${r['frequency']} • ~KSh ${NumberFormat('#,##0').format(r['avgAmount'])}', 
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                ],
+            ..._recurring.map(
+              (r) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      r['merchant'],
+                      style: const TextStyle(color: AppColors.textPrimary),
+                    ),
+                    Text(
+                      '${r['frequency']} • ~KSh ${NumberFormat('#,##0').format(r['avgAmount'])}',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
         ],
       ),
     );
@@ -479,19 +575,36 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Payment Methods', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          ..._paymentMethods.entries.map((e) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(e.key, style: const TextStyle(color: AppColors.textPrimary)),
-                Text('${e.value['count']}x • KSh ${NumberFormat('#,##0').format(e.value['total'])}', 
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-              ],
+          const Text(
+            'Payment Methods',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
-          )),
+          ),
+          const SizedBox(height: 12),
+          ..._paymentMethods.entries.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    e.key,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                  ),
+                  Text(
+                    '${e.value['count']}x • KSh ${NumberFormat('#,##0').format(e.value['total'])}',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -511,18 +624,33 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
             children: [
               const Icon(Icons.warning, color: AppColors.warning, size: 20),
               const SizedBox(width: 8),
-              Text('Failed Transactions (${_failed.length})', 
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                'Failed Transactions (${_failed.length})',
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          ..._failed.take(3).map((t) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(t.description, 
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis),
-          )),
+          ..._failed
+              .take(3)
+              .map(
+                (t) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    t.description,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
         ],
       ),
     );
@@ -538,16 +666,31 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('International Transactions (${_international.length})', 
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(
+            'International Transactions (${_international.length})',
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 12),
-          ..._international.take(3).map((t) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text('KSh ${NumberFormat('#,##0').format(t.amount)} - ${t.description}', 
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
-          )),
+          ..._international
+              .take(3)
+              .map(
+                (t) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'KSh ${NumberFormat('#,##0').format(t.amount)} - ${t.description}',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
         ],
       ),
     );
@@ -564,36 +707,79 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Money Sent to People', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            'Money Sent to People',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 12),
           if (lending.isEmpty)
-            const Text('No P2P transactions', style: TextStyle(color: AppColors.textSecondary))
+            const Text(
+              'No P2P transactions',
+              style: TextStyle(color: AppColors.textSecondary),
+            )
           else
-            ...lending.entries.take(5).map((e) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(child: Text(e.key, style: const TextStyle(color: AppColors.textPrimary))),
-                  Text('KSh ${NumberFormat('#,##0').format(e.value['total'])}', 
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                ],
-              ),
-            )),
+            ...lending.entries
+                .take(5)
+                .map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            e.key,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          'KSh ${NumberFormat('#,##0').format(e.value['total'])}',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
         ],
       ),
     );
   }
 
-  Widget _buildRow(String label, double value, Color color, NumberFormat fmt, {bool bold = false}) {
+  Widget _buildRow(
+    String label,
+    double value,
+    Color color,
+    NumberFormat fmt, {
+    bool bold = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: AppColors.textSecondary, fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
-          Text('KSh ${fmt.format(value)}', 
-            style: TextStyle(color: color, fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+          Text(
+            label,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          Text(
+            'KSh ${fmt.format(value)}',
+            style: TextStyle(
+              color: color,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
         ],
       ),
     );

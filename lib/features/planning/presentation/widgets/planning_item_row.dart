@@ -47,8 +47,12 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.item.name);
-    _estimatedController = TextEditingController(text: widget.item.estimatedCost.toStringAsFixed(0));
-    _actualController = TextEditingController(text: widget.item.actualCost.toStringAsFixed(0));
+    _estimatedController = TextEditingController(
+      text: widget.item.estimatedCost.toStringAsFixed(0),
+    );
+    _actualController = TextEditingController(
+      text: widget.item.actualCost.toStringAsFixed(0),
+    );
     _notesController = TextEditingController(text: widget.item.notes);
   }
 
@@ -71,11 +75,15 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
         setState(() => _isEditingName = false);
         break;
       case 'estimated':
-        updated = widget.item.copyWith(estimatedCost: double.tryParse(_estimatedController.text) ?? 0);
+        updated = widget.item.copyWith(
+          estimatedCost: double.tryParse(_estimatedController.text) ?? 0,
+        );
         setState(() => _isEditingEstimated = false);
         break;
       case 'actual':
-        updated = widget.item.copyWith(actualCost: double.tryParse(_actualController.text) ?? 0);
+        updated = widget.item.copyWith(
+          actualCost: double.tryParse(_actualController.text) ?? 0,
+        );
         setState(() => _isEditingActual = false);
         break;
       case 'notes':
@@ -89,18 +97,29 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
   @override
   Widget build(BuildContext context) {
     final hasChildren = widget.children.isNotEmpty;
-    final childEstimated = widget.children.fold(0.0, (sum, child) => sum + child.estimatedCost);
-    final childActual = widget.children.fold(0.0, (sum, child) => sum + child.actualCost);
+    final childEstimated = widget.children.fold(
+      0.0,
+      (sum, child) => sum + child.estimatedCost,
+    );
+    final childActual = widget.children.fold(
+      0.0,
+      (sum, child) => sum + child.actualCost,
+    );
     final totalEstimated = widget.item.estimatedCost + childEstimated;
     final totalActual = widget.item.actualCost + childActual;
 
     return Container(
-      margin: EdgeInsets.only(bottom: widget.isChild ? 0 : 8, left: widget.isChild ? 32 : 0),
+      margin: EdgeInsets.only(
+        bottom: widget.isChild ? 0 : 8,
+        left: widget.isChild ? 32 : 0,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: widget.item.isCompleted ? AppColors.income.withOpacity(0.3) : Colors.transparent,
+          color: widget.item.isCompleted
+              ? AppColors.income.withValues(alpha: 0.3)
+              : Colors.transparent,
         ),
       ),
       child: Padding(
@@ -113,7 +132,9 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                   GestureDetector(
                     onTap: widget.onToggleExpand,
                     child: Icon(
-                      widget.isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right,
+                      widget.isExpanded
+                          ? Icons.keyboard_arrow_down
+                          : Icons.keyboard_arrow_right,
                       color: AppColors.textSecondary,
                       size: 20,
                     ),
@@ -124,8 +145,12 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                 GestureDetector(
                   onTap: widget.onToggle,
                   child: Icon(
-                    widget.item.isCompleted ? Icons.check_box : Icons.check_box_outline_blank,
-                    color: widget.item.isCompleted ? AppColors.income : AppColors.textSecondary,
+                    widget.item.isCompleted
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                    color: widget.item.isCompleted
+                        ? AppColors.income
+                        : AppColors.textSecondary,
                     size: 24,
                   ),
                 ),
@@ -139,7 +164,9 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                           style: TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: widget.isChild ? 14 : 15,
-                            fontWeight: widget.isChild ? FontWeight.normal : FontWeight.w600,
+                            fontWeight: widget.isChild
+                                ? FontWeight.normal
+                                : FontWeight.w600,
                           ),
                           decoration: const InputDecoration(
                             isDense: true,
@@ -151,12 +178,20 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                       : GestureDetector(
                           onTap: () => setState(() => _isEditingName = true),
                           child: Text(
-                            widget.item.name.isEmpty ? 'Untitled' : widget.item.name,
+                            widget.item.name.isEmpty
+                                ? 'Untitled'
+                                : widget.item.name,
                             style: TextStyle(
-                              color: widget.item.name.isEmpty ? AppColors.textSecondary : AppColors.textPrimary,
+                              color: widget.item.name.isEmpty
+                                  ? AppColors.textSecondary
+                                  : AppColors.textPrimary,
                               fontSize: widget.isChild ? 14 : 15,
-                              fontWeight: widget.isChild ? FontWeight.normal : FontWeight.w600,
-                              decoration: widget.item.isCompleted ? TextDecoration.lineThrough : null,
+                              fontWeight: widget.isChild
+                                  ? FontWeight.normal
+                                  : FontWeight.w600,
+                              decoration: widget.item.isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : null,
                             ),
                           ),
                         ),
@@ -168,8 +203,13 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                           controller: _estimatedController,
                           autofocus: true,
                           keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
                           textAlign: TextAlign.right,
                           decoration: const InputDecoration(
                             isDense: true,
@@ -179,10 +219,14 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                           onSubmitted: (_) => _saveField('estimated'),
                         )
                       : GestureDetector(
-                          onTap: () => setState(() => _isEditingEstimated = true),
+                          onTap: () =>
+                              setState(() => _isEditingEstimated = true),
                           child: Text(
                             '${widget.currency} ${totalEstimated.toStringAsFixed(0)}',
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                            ),
                             textAlign: TextAlign.right,
                           ),
                         ),
@@ -195,9 +239,13 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                           controller: _actualController,
                           autofocus: true,
                           keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
                           style: TextStyle(
-                            color: totalActual > 0 ? AppColors.primary : AppColors.textSecondary,
+                            color: totalActual > 0
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
                             fontSize: 13,
                           ),
                           textAlign: TextAlign.right,
@@ -213,21 +261,31 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                           child: Text(
                             '${widget.currency} ${totalActual.toStringAsFixed(0)}',
                             style: TextStyle(
-                              color: totalActual > 0 ? AppColors.primary : AppColors.textSecondary,
+                              color: totalActual > 0
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
                               fontSize: 13,
-                              fontWeight: totalActual > 0 ? FontWeight.w600 : FontWeight.normal,
+                              fontWeight: totalActual > 0
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                             textAlign: TextAlign.right,
                           ),
                         ),
                 ),
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: AppColors.textSecondary, size: 20),
+                  icon: const Icon(
+                    Icons.more_vert,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
                   color: AppColors.surface,
                   onSelected: (value) {
                     if (value == 'add_child') widget.onAddChild?.call();
                     if (value == 'delete') widget.onDelete();
-                    if (value == 'add_note') setState(() => _isEditingNotes = true);
+                    if (value == 'add_note') {
+                      setState(() => _isEditingNotes = true);
+                    }
                   },
                   itemBuilder: (context) => [
                     if (!widget.isChild)
@@ -235,9 +293,16 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                         value: 'add_child',
                         child: Row(
                           children: [
-                            Icon(Icons.add, size: 18, color: AppColors.textPrimary),
+                            Icon(
+                              Icons.add,
+                              size: 18,
+                              color: AppColors.textPrimary,
+                            ),
                             SizedBox(width: 8),
-                            Text('Add sub-item', style: TextStyle(color: AppColors.textPrimary)),
+                            Text(
+                              'Add sub-item',
+                              style: TextStyle(color: AppColors.textPrimary),
+                            ),
                           ],
                         ),
                       ),
@@ -245,9 +310,16 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                       value: 'add_note',
                       child: Row(
                         children: [
-                          Icon(Icons.note_add, size: 18, color: AppColors.textPrimary),
+                          Icon(
+                            Icons.note_add,
+                            size: 18,
+                            color: AppColors.textPrimary,
+                          ),
                           SizedBox(width: 8),
-                          Text('Add note', style: TextStyle(color: AppColors.textPrimary)),
+                          Text(
+                            'Add note',
+                            style: TextStyle(color: AppColors.textPrimary),
+                          ),
                         ],
                       ),
                     ),
@@ -257,7 +329,10 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                         children: [
                           Icon(Icons.delete, size: 18, color: AppColors.error),
                           SizedBox(width: 8),
-                          Text('Delete', style: TextStyle(color: AppColors.error)),
+                          Text(
+                            'Delete',
+                            style: TextStyle(color: AppColors.error),
+                          ),
                         ],
                       ),
                     ),
@@ -272,7 +347,10 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                     ? TextField(
                         controller: _notesController,
                         autofocus: true,
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
                         decoration: const InputDecoration(
                           isDense: true,
                           hintText: 'Add a note...',
@@ -287,7 +365,10 @@ class _PlanningItemRowState extends State<PlanningItemRow> {
                           alignment: Alignment.centerLeft,
                           child: Text(
                             widget.item.notes,
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ),

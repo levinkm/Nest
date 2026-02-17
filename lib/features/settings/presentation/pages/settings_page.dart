@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_helper.dart';
+import '../../../../core/debug/debug_menu_page.dart';
 import '../../../bills/presentation/pages/bills_page.dart';
 import '../../../bills/presentation/pages/financial_insights_page.dart';
 import '../../../transactions/presentation/pages/recurring_income_page.dart';
@@ -59,9 +60,7 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildSmsDaysBackTile(),
             _buildAutoSyncTile(),
           ]),
-          _buildSection('Appearance', [
-            _buildThemeModeTile(),
-          ]),
+          _buildSection('Appearance', [_buildThemeModeTile()]),
           _buildSection('Notifications', [
             _buildSwitchTile('Budget Alerts', _budgetAlerts, (val) async {
               setState(() => _budgetAlerts = val);
@@ -81,24 +80,43 @@ class _SettingsPageState extends State<SettingsPage> {
           ]),
           _buildSection('Category Management', [
             _buildTile('Manage Categories', Icons.category, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryManagementPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const CategoryManagementPage(),
+                ),
+              );
             }),
           ]),
           _buildSection('Bills & Payments', [
             _buildTile('Recurring Income', Icons.attach_money, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const RecurringIncomePage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RecurringIncomePage()),
+              );
             }),
             _buildTile('Bill Tracker', Icons.receipt_long, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const BillsPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const BillsPage()),
+              );
             }),
             _buildTile('Financial Insights', Icons.lightbulb, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const FinancialInsightsPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const FinancialInsightsPage(),
+                ),
+              );
             }),
             _buildTile('Debt Manager', Icons.credit_card, () {
               Navigator.pushNamed(context, '/debt-manager');
             }),
             _buildTile('Planning & Goals', Icons.checklist, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const PlanningPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PlanningPage()),
+              );
             }),
           ]),
           _buildSection('Data & Backup', [
@@ -107,10 +125,20 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildTile('Restore Data', Icons.restore, () => _restoreData()),
           ]),
           _buildSection('Security', [
-            _buildTile('Biometric Lock', Icons.fingerprint, () => _setupBiometric()),
+            _buildTile(
+              'Biometric Lock',
+              Icons.fingerprint,
+              () => _setupBiometric(),
+            ),
           ]),
           _buildSection('About', [
             _buildInfoTile('Version', '1.0.0'),
+            _buildTile('Debug Menu', Icons.developer_mode, () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DebugMenuPage()),
+              );
+            }),
           ]),
         ],
       ),
@@ -123,7 +151,14 @@ class _SettingsPageState extends State<SettingsPage> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primary)),
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
+          ),
         ),
         ...children,
         const Divider(height: 1),
@@ -155,7 +190,13 @@ class _SettingsPageState extends State<SettingsPage> {
     return ListTile(
       leading: const Icon(Icons.palette),
       title: const Text('Theme Mode'),
-      subtitle: Text(_themeMode == 'light' ? 'Light' : _themeMode == 'dark' ? 'Dark' : 'System'),
+      subtitle: Text(
+        _themeMode == 'light'
+            ? 'Light'
+            : _themeMode == 'dark'
+            ? 'Dark'
+            : 'System',
+      ),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => _showThemeModePicker(),
     );
@@ -181,20 +222,36 @@ class _SettingsPageState extends State<SettingsPage> {
       title: const Text('Budget Limits'),
       subtitle: const Text('Set spending limits'),
       trailing: const Icon(Icons.chevron_right),
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BudgetLimitsPage())),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const BudgetLimitsPage()),
+      ),
     );
   }
 
   Widget _buildSwitchTile(String title, bool value, Function(bool) onChanged) {
-    return SwitchListTile(title: Text(title), value: value, onChanged: onChanged);
+    return SwitchListTile(
+      title: Text(title),
+      value: value,
+      onChanged: onChanged,
+    );
   }
 
   Widget _buildTile(String title, IconData icon, VoidCallback onTap) {
-    return ListTile(leading: Icon(icon), title: Text(title), trailing: const Icon(Icons.chevron_right), onTap: onTap);
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
   }
 
   Widget _buildInfoTile(String title, String value) {
-    return ListTile(leading: const Icon(Icons.info), title: Text(title), trailing: Text(value));
+    return ListTile(
+      leading: const Icon(Icons.info),
+      title: Text(title),
+      trailing: Text(value),
+    );
   }
 
   void _showCurrencyPicker() {
@@ -205,18 +262,24 @@ class _SettingsPageState extends State<SettingsPage> {
         title: const Text('Select Currency'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: currencies.map((c) => RadioListTile<String>(
-            title: Text(c),
-            value: c,
-            groupValue: _currency,
-            onChanged: (val) async {
-              setState(() => _currency = val!);
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('currency', val!);
-              await CurrencyHelper.setCurrency(val);
-              Navigator.pop(context);
-            },
-          )).toList(),
+          children: currencies
+              .map(
+                (c) => RadioListTile<String>(
+                  title: Text(c),
+                  value: c,
+                  groupValue: _currency,
+                  onChanged: (val) async {
+                    setState(() => _currency = val!);
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setString('currency', val!);
+                    await CurrencyHelper.setCurrency(val);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              )
+              .toList(),
         ),
       ),
     );
@@ -230,17 +293,23 @@ class _SettingsPageState extends State<SettingsPage> {
         title: const Text('SMS Days Back'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: days.map((d) => RadioListTile<int>(
-            title: Text('$d days'),
-            value: d,
-            groupValue: _smsDaysBack,
-            onChanged: (val) async {
-              setState(() => _smsDaysBack = val!);
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setInt('sms_days_back', val!);
-              Navigator.pop(context);
-            },
-          )).toList(),
+          children: days
+              .map(
+                (d) => RadioListTile<int>(
+                  title: Text('$d days'),
+                  value: d,
+                  groupValue: _smsDaysBack,
+                  onChanged: (val) async {
+                    setState(() => _smsDaysBack = val!);
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setInt('sms_days_back', val!);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              )
+              .toList(),
         ),
       ),
     );
@@ -254,17 +323,23 @@ class _SettingsPageState extends State<SettingsPage> {
         title: const Text('Theme Mode'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: modes.entries.map((e) => RadioListTile<String>(
-            title: Text(e.value),
-            value: e.key,
-            groupValue: _themeMode,
-            onChanged: (val) async {
-              setState(() => _themeMode = val!);
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('theme_mode', val!);
-              Navigator.pop(context);
-            },
-          )).toList(),
+          children: modes.entries
+              .map(
+                (e) => RadioListTile<String>(
+                  title: Text(e.value),
+                  value: e.key,
+                  groupValue: _themeMode,
+                  onChanged: (val) async {
+                    setState(() => _themeMode = val!);
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setString('theme_mode', val!);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              )
+              .toList(),
         ),
       ),
     );
@@ -279,17 +354,23 @@ class _SettingsPageState extends State<SettingsPage> {
         'incomes': prefs.getString('expected_incomes') ?? '[]',
         'rules': prefs.getString('savings_rules') ?? '[]',
       };
-      
+
       final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/nest_export_${DateTime.now().millisecondsSinceEpoch}.json');
+      final file = File(
+        '${dir.path}/nest_export_${DateTime.now().millisecondsSinceEpoch}.json',
+      );
       await file.writeAsString(jsonEncode(data));
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Exported to ${file.path}')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Exported to ${file.path}')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
       }
     }
   }
@@ -301,17 +382,23 @@ class _SettingsPageState extends State<SettingsPage> {
         map[key] = prefs.get(key);
         return map;
       });
-      
+
       final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/nest_backup_${DateTime.now().millisecondsSinceEpoch}.json');
+      final file = File(
+        '${dir.path}/nest_backup_${DateTime.now().millisecondsSinceEpoch}.json',
+      );
       await file.writeAsString(jsonEncode(backup));
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Backup saved to ${file.path}')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Backup saved to ${file.path}')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Backup failed: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Backup failed: $e')));
       }
     }
   }
@@ -323,11 +410,16 @@ class _SettingsPageState extends State<SettingsPage> {
         title: const Text('Restore Data'),
         content: const Text('This will replace all current data. Continue?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Restore feature coming soon')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Restore feature coming soon')),
+              );
             },
             child: const Text('Restore'),
           ),
@@ -342,7 +434,12 @@ class _SettingsPageState extends State<SettingsPage> {
       builder: (context) => AlertDialog(
         title: const Text('Biometric Lock'),
         content: const Text('Biometric authentication coming in next update.'),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
   }
@@ -381,7 +478,10 @@ class _BudgetLimitsPageState extends State<BudgetLimitsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Budget Limits')),
-      floatingActionButton: FloatingActionButton(onPressed: _addBudget, child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addBudget,
+        child: const Icon(Icons.add),
+      ),
       body: _budgets.isEmpty
           ? const Center(child: Text('No budget limits set'))
           : ListView.builder(
@@ -390,7 +490,9 @@ class _BudgetLimitsPageState extends State<BudgetLimitsPage> {
                 final entry = _budgets.entries.elementAt(index);
                 return ListTile(
                   title: Text(entry.key),
-                  subtitle: Text('$_currency ${entry.value.toStringAsFixed(0)}'),
+                  subtitle: Text(
+                    '$_currency ${entry.value.toStringAsFixed(0)}',
+                  ),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () {
@@ -408,7 +510,7 @@ class _BudgetLimitsPageState extends State<BudgetLimitsPage> {
   void _addBudget() {
     final categoryController = TextEditingController();
     final amountController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -416,16 +518,31 @@ class _BudgetLimitsPageState extends State<BudgetLimitsPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: categoryController, decoration: const InputDecoration(labelText: 'Category')),
-            TextField(controller: amountController, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'Limit ($_currency)')),
+            TextField(
+              controller: categoryController,
+              decoration: const InputDecoration(labelText: 'Category'),
+            ),
+            TextField(
+              controller: amountController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: 'Limit ($_currency)'),
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () {
-              if (categoryController.text.isNotEmpty && amountController.text.isNotEmpty) {
-                setState(() => _budgets[categoryController.text] = double.parse(amountController.text));
+              if (categoryController.text.isNotEmpty &&
+                  amountController.text.isNotEmpty) {
+                setState(
+                  () => _budgets[categoryController.text] = double.parse(
+                    amountController.text,
+                  ),
+                );
                 _saveBudgets();
                 Navigator.pop(context);
               }
@@ -439,18 +556,28 @@ class _BudgetLimitsPageState extends State<BudgetLimitsPage> {
 
   void _editBudget(String category, double amount) {
     final amountController = TextEditingController(text: amount.toString());
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Edit $category Budget'),
-        content: TextField(controller: amountController, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'Limit ($_currency)')),
+        content: TextField(
+          controller: amountController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: 'Limit ($_currency)'),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () {
               if (amountController.text.isNotEmpty) {
-                setState(() => _budgets[category] = double.parse(amountController.text));
+                setState(
+                  () =>
+                      _budgets[category] = double.parse(amountController.text),
+                );
                 _saveBudgets();
                 Navigator.pop(context);
               }
@@ -494,7 +621,10 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Manage Categories')),
-      floatingActionButton: FloatingActionButton(onPressed: _addCategory, child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addCategory,
+        child: const Icon(Icons.add),
+      ),
       body: _categories.isEmpty
           ? const Center(child: Text('No custom categories'))
           : ListView.builder(
@@ -521,9 +651,15 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Add Category'),
-        content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Category Name')),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Category Name'),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {

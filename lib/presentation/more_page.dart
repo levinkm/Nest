@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/debug/debug_menu_page.dart';
 import '../../features/financial_planning/presentation/pages/financial_planning_page.dart';
 import '../../features/debt_management/presentation/pages/debt_management_page.dart';
 import '../../features/transactions/presentation/pages/settings_page.dart';
@@ -32,7 +33,14 @@ class MorePage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('Analytics', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+          const Text(
+            'Analytics',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           _buildMenuItem(
             context,
@@ -56,7 +64,14 @@ class MorePage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Financial Planning', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+          const Text(
+            'Financial Planning',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           _buildMenuItem(
             context,
@@ -80,7 +95,14 @@ class MorePage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Income & Expenses', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+          const Text(
+            'Income & Expenses',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           _buildMenuItem(
             context,
@@ -115,7 +137,14 @@ class MorePage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Insights', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+          const Text(
+            'Insights',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           _buildMenuItem(
             context,
@@ -128,7 +157,14 @@ class MorePage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Settings', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+          const Text(
+            'Settings',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           _buildMenuItem(
             context,
@@ -138,6 +174,17 @@ class MorePage extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SettingsPage()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildMenuItem(
+            context,
+            icon: Icons.developer_mode_rounded,
+            title: 'Debug Menu',
+            subtitle: 'Developer tools & testing',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DebugMenuPage()),
             ),
           ),
         ],
@@ -169,7 +216,7 @@ class MorePage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: AppColors.primary, size: 24),
