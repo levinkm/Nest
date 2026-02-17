@@ -4,16 +4,18 @@
   <img src="assets/logo.png" alt="Nest Logo" width="200"/>
 </p>
 
-A comprehensive personal finance management app built with Flutter, featuring SMS-based transaction parsing, budget tracking, savings goals, debt management, and financial analytics.
+A comprehensive personal finance management app built with Flutter, featuring **real-time SMS-based transaction parsing**, budget tracking, savings goals, debt management, and financial analytics.
 
 ##  Features
 
 ###  Core Features
-- **SMS Transaction Parsing**: Automatically extracts and categorizes transactions from M-Pesa and bank SMS messages
+- **Real-Time SMS Transaction Parsing**: Automatically extracts and categorizes transactions from M-Pesa and bank SMS messages as they arrive
+- **Auto-Sync Control**: Quick Settings tile to enable/disable real-time SMS monitoring
 - **Dashboard Analytics**: Real-time financial overview with spending trends and category breakdowns
 - **Transaction Management**: View, edit, and categorize all your financial transactions
-- **Budget Tracking**: Set and monitor spending limits by category
+- **Budget Tracking**: Set and monitor spending limits by category with current period tracking
 - **Multi-Currency Support**: KSh, USD, EUR, GBP, TZS, UGX
+- **M-Pesa Ledger**: Export detailed transaction ledger to CSV
 
 ###  Financial Planning
 - **Savings Goals**: Create and track multiple savings goals with progress monitoring
@@ -26,7 +28,8 @@ A comprehensive personal finance management app built with Flutter, featuring SM
 - **Debt Tracking**: Monitor multiple debts with interest calculations
 - **Payment History**: Record and view all debt payments
 - **Interest Tracking**: Support for monthly, yearly, and principal-based interest
-- **Fuliza Debt Detection**: Automatic detection and tracking of M-Pesa Fuliza loans
+- **Fuliza Debt Detection**: Automatic detection and tracking of M-Pesa Fuliza loans with access fees
+- **Real-Time Fuliza Updates**: Instant tracking of Fuliza borrowing and repayments
 
 ###  Analytics & Insights
 - **7-Day Spending Trends**: Visual charts showing daily spending patterns
@@ -46,6 +49,8 @@ A comprehensive personal finance management app built with Flutter, featuring SM
 - **Smooth Animations**: Polished transitions and interactions
 - **Responsive Design**: Optimized for various screen sizes
 - **Offline Support**: Local SQLite database for offline functionality
+- **Quick Settings Integration**: Android Quick Settings tiles for Auto Sync and Daily Sync
+- **Real-Time Updates**: Dashboard automatically refreshes when new SMS transactions arrive
 
 ##  Architecture
 
@@ -128,10 +133,18 @@ lib/
 ### First Launch
 1. Set up a 4-digit PIN for security
 2. Grant SMS permissions for automatic transaction parsing
-3. Sync SMS messages to import transactions
+3. Enable Auto Sync from Android Quick Settings for real-time monitoring
+4. Sync SMS messages to import historical transactions
+
+### Real-Time SMS Monitoring
+- **Auto Sync**: Pull down Quick Settings → Enable "Auto Sync" tile
+- When enabled, transactions are automatically parsed and added as SMS arrives
+- Dashboard updates instantly with new transactions
+- Disable Auto Sync to stop real-time monitoring and save battery
 
 ### Managing Transactions
-- **Auto-sync**: Transactions are automatically parsed from SMS
+- **Auto-sync**: Transactions are automatically parsed from SMS in real-time
+- **Manual sync**: Use "Daily Sync" Quick Settings tile for one-time sync
 - **Manual entry**: Add transactions manually via the + button
 - **Categorization**: Edit categories and add custom categories
 - **Classification Rules**: Set up keywords for automatic categorization
