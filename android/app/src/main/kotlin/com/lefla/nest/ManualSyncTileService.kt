@@ -54,6 +54,7 @@ class ManualSyncTileService : TileService() {
             state = if (canSync) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
             label = "Daily Sync"
             subtitle = if (canSync) "Available" else "Synced"
+            icon = android.graphics.drawable.Icon.createWithResource(applicationContext, android.R.drawable.ic_popup_sync)
             updateTile()
         }
     }

@@ -46,6 +46,7 @@ class AutoSyncTileService : TileService() {
             state = if (isEnabled) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
             label = "Auto Sync"
             subtitle = if (isEnabled) "ON" else "OFF"
+            icon = android.graphics.drawable.Icon.createWithResource(applicationContext, android.R.drawable.ic_menu_rotate)
             updateTile()
         }
     }

@@ -38,7 +38,7 @@ class SmsParserDataSource {
             msg['date'] as int? ?? DateTime.now().millisecondsSinceEpoch;
         final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
 
-        final parsed = await _parseMessage(body, date);
+        final parsed = await parseMessage(body, date);
         if (parsed != null) {
           transactions.add(parsed);
           developer.log(
@@ -68,7 +68,7 @@ class SmsParserDataSource {
     }
   }
 
-  Future<SmsTransaction?> _parseMessage(String body, DateTime date) async {
+  Future<SmsTransaction?> parseMessage(String body, DateTime date) async {
     if (_isFailedTransaction(body)) {
       developer.log('Skipping failed transaction');
       return null;
@@ -199,10 +199,17 @@ class SmsParserDataSource {
   bool _isNotificationOnly(String body) {
     final lowerBody = body.toLowerCase();
     
+    // Standalone Fuliza Access Fees messages (no transaction code)
+    if (lowerBody.contains('fuliza access fees') && 
+        !lowerBody.contains('confirmed')) {
+      return true;
+    }
+    
     // Loan reminders/notifications (not actual transactions)
     if ((lowerBody.contains('due on') || lowerBody.contains('is due')) &&
         !lowerBody.contains('confirmed') &&
-        !lowerBody.contains('fuliza m-pesa amount')) {
+        !lowerBody.contains('fuliza m-pesa amount') &&
+        !lowerBody.contains('fuliza access fees')) {
       return true;
     }
     
@@ -369,6 +376,11 @@ class SmsParserDataSource {
   }
 
   double _extractTransactionFee(String body) {
+    // Skip fee extraction for Fuliza Access Fees (the transaction itself is the fee)
+    if (body.toLowerCase().contains('fuliza access fees')) {
+      return 0.0;
+    }
+    
     // M-Pesa fee patterns - multiple variations
     final feePatterns = [
       RegExp(r'transaction cost[,:]?\s*ksh\.?\s*([\d,]+\.?\d*)', caseSensitive: false),

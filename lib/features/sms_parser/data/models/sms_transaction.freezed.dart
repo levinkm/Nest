@@ -273,7 +273,7 @@ class __$$SmsTransactionImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$SmsTransactionImpl implements _SmsTransaction {
+class _$SmsTransactionImpl extends _SmsTransaction {
   const _$SmsTransactionImpl({
     required this.amount,
     required this.category,
@@ -288,7 +288,7 @@ class _$SmsTransactionImpl implements _SmsTransaction {
     this.fulizaDueDate,
     this.ziidiBalance,
     this.counterparty,
-  });
+  }) : super._();
 
   factory _$SmsTransactionImpl.fromJson(Map<String, dynamic> json) =>
       _$$SmsTransactionImplFromJson(json);
@@ -392,7 +392,7 @@ class _$SmsTransactionImpl implements _SmsTransaction {
   }
 }
 
-abstract class _SmsTransaction implements SmsTransaction {
+abstract class _SmsTransaction extends SmsTransaction {
   const factory _SmsTransaction({
     required final double amount,
     required final String category,
@@ -408,6 +408,7 @@ abstract class _SmsTransaction implements SmsTransaction {
     final double? ziidiBalance,
     final String? counterparty,
   }) = _$SmsTransactionImpl;
+  const _SmsTransaction._() : super._();
 
   factory _SmsTransaction.fromJson(Map<String, dynamic> json) =
       _$SmsTransactionImpl.fromJson;

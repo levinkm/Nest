@@ -22,6 +22,8 @@ import 'features/transactions/services/shared_file_handler.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/remote_config_service.dart';
 
+const smsEventsChannel = MethodChannel('com.nest.finance/sms_events');
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -54,6 +56,37 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _initSharedFileListener();
+    _initSmsEventsListener();
+  }
+
+  void _initSmsEventsListener() {
+    smsEventsChannel.setMethodCallHandler((call) async {
+      if (call.method == 'onSmsReceived') {
+        final body = call.arguments['body'] as String?;
+        final timestamp = call.arguments['timestamp'] as int?;
+        
+        if (body != null) {
+          final context = _navigatorKey.currentContext;
+          if (context != null) {
+            // Parse the SMS and add transaction
+            final smsParser = SmsParserDataSource();
+            final date = DateTime.fromMillisecondsSinceEpoch(timestamp ?? DateTime.now().millisecondsSinceEpoch);
+            final transaction = await smsParser.parseMessage(body, date);
+            
+            if (transaction != null) {
+              // Convert SmsTransaction to Transaction
+              final db = LocalDatabase();
+              await db.insertTransaction(transaction.toTransaction());
+              
+              // Reload transactions to update UI
+              context.read<TransactionBloc>().add(
+                const TransactionEvent.loadTransactions(),
+              );
+            }
+          }
+        }
+      }
+    });
   }
 
   void _initSharedFileListener() {

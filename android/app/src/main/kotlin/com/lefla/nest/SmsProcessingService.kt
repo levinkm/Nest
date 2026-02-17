@@ -19,14 +19,22 @@ class SmsProcessingService : Service() {
         Log.d(TAG, "Processing SMS in background service")
         
         // Send to Flutter via MethodChannel
-        val messenger = (application as? FlutterApplication)?.flutterEngine?.dartExecutor?.binaryMessenger
-        if (messenger != null) {
-            val channel = MethodChannel(messenger, "com.nest.finance/sms_events")
-            channel.invokeMethod("onSmsReceived", mapOf(
-                "body" to body,
-                "address" to address,
-                "timestamp" to timestamp
-            ))
+        try {
+            val flutterApp = application as? FlutterApplication
+            val messenger = flutterApp?.flutterEngine?.dartExecutor?.binaryMessenger
+            if (messenger != null) {
+                val channel = MethodChannel(messenger, "com.nest.finance/sms_events")
+                channel.invokeMethod("onSmsReceived", mapOf(
+                    "body" to body,
+                    "address" to address,
+                    "timestamp" to timestamp
+                ))
+                Log.d(TAG, "SMS event sent to Flutter")
+            } else {
+                Log.w(TAG, "Flutter engine not available")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error sending SMS to Flutter: ${e.message}")
         }
 
         stopSelf(startId)

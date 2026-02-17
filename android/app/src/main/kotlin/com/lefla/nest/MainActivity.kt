@@ -12,13 +12,18 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.nest.finance/sms"
+    private val EVENTS_CHANNEL = "com.nest.finance/sms_events"
     private val TAG = "NestFinance"
     private val SMS_PERMISSION_CODE = 100
     private var pendingResult: MethodChannel.Result? = null
+    private var eventsChannel: MethodChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         (application as? FlutterApplication)?.flutterEngine = flutterEngine
+        
+        // Setup events channel for real-time SMS
+        eventsChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, EVENTS_CHANNEL)
         
         // Handle manual sync from Quick Settings
         if (intent?.action == "MANUAL_SYNC") {
