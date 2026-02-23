@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../bloc/transaction_bloc.dart';
 import '../../domain/entities/transaction.dart';
 import 'import_transactions_page.dart';
+import 'transactions_filter_page.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class TransactionsPage extends StatelessWidget {
@@ -31,6 +32,21 @@ class TransactionsPage extends StatelessWidget {
                   ),
                   Row(
                     children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.filter_list,
+                          color: AppColors.textSecondary,
+                          size: 24,
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const TransactionsFilterPage(),
+                            ),
+                          );
+                        },
+                      ),
                       IconButton(
                         icon: const Icon(
                           Icons.file_upload_outlined,

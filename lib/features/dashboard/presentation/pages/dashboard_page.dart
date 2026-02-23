@@ -3,9 +3,11 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:nest/features/bills/presentation/pages/bills_page.dart';
 import 'package:nest/features/transactions/presentation/pages/transactions_page.dart';
 import 'package:nest/features/transactions/presentation/pages/import_transactions_page.dart';
+import 'package:nest/presentation/widgets/expandable_transaction_item.dart';
 import '../../../transactions/presentation/bloc/transaction_bloc.dart';
 import '../../../ledger/presentation/pages/ledger_page.dart';
 import '../../../../core/utils/financial_stats_calculator.dart';
@@ -16,8 +18,15 @@ import '../../../../core/utils/currency_helper.dart';
 import '../../../transactions/data/datasources/local_database.dart';
 import '../../../bills/presentation/widgets/bill_suggestions_dialog.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  String? _expandedTransactionId;
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +129,7 @@ class DashboardPage extends StatelessWidget {
                                         _buildBalanceCard(
                                           stats.netBalance,
                                           currency,
+                                          context,
                                         ),
                                         const SizedBox(height: 16),
 
@@ -362,37 +372,87 @@ class DashboardPage extends StatelessWidget {
     return {'upcomingCount': upcomingCount, 'totalUpcoming': totalUpcoming};
   }
 
-  Widget _buildBalanceCard(double balance, String currency) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.cardGradientStart, AppColors.cardGradientEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Net Balance',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '$currency ${balance.toStringAsFixed(2)}',
-            style: TextStyle(
-              color: balance >= 0 ? AppColors.income : AppColors.expense,
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
+  Widget _buildBalanceCard(
+    double netBalance,
+    String currency,
+    BuildContext context,
+  ) {
+    return FutureBuilder<double>(
+      future: _getRemainingBalance(),
+      builder: (context, snapshot) {
+        final remainingBalance = snapshot.data ?? 0.0;
+        final isPositive = remainingBalance >= 0;
+        final formattedAmount = NumberFormat(
+          '#,##0.00',
+        ).format(remainingBalance.abs());
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isPositive
+                  ? [AppColors.cardGradientStart, AppColors.cardGradientEnd]
+                  : [
+                      AppColors.error.withOpacity(0.8),
+                      AppColors.error.withOpacity(0.6),
+                    ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(20),
           ),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Remaining Balance',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Icon(
+                    isPositive ? Icons.trending_up : Icons.trending_down,
+                    color: Colors.white70,
+                    size: 20,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '$currency $formattedAmount',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Net: $currency ${NumberFormat('#,##0.00').format(netBalance)}',
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
+  }
+
+  Future<double> _getRemainingBalance() async {
+    final db = LocalDatabase();
+    final account = await db.getAccount('mpesa_default');
+    return account?['balance'] ?? 0.0;
   }
 
   Widget _buildStatCard(
@@ -439,7 +499,12 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _buildRecentTransactions(List<dynamic> transactions, String currency) {
-    final recent = transactions.take(5).toList();
+    final recent = transactions
+        .where(
+          (t) => !t.description.toLowerCase().contains('fuliza access fees'),
+        )
+        .take(3)
+        .toList();
     if (recent.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -482,63 +547,13 @@ class DashboardPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ...recent.map(
-            (t) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: t.type == 'income'
-                          ? AppColors.income.withOpacity(0.2)
-                          : AppColors.expense.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      t.type == 'income'
-                          ? Icons.arrow_downward
-                          : Icons.arrow_upward,
-                      color: t.type == 'income'
-                          ? AppColors.income
-                          : AppColors.expense,
-                      size: 16,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.description,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          '${t.date.day}/${t.date.month}/${t.date.year}',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    '${t.type == 'income' ? '+' : '-'}$currency ${t.amount.toStringAsFixed(0)}',
-                    style: TextStyle(
-                      color: t.type == 'income'
-                          ? AppColors.income
-                          : AppColors.expense,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+            (t) => ExpandableTransactionItem(
+              transaction: t,
+              isExpanded: _expandedTransactionId == t.id,
+              onTap: () => setState(
+                () => _expandedTransactionId = _expandedTransactionId == t.id
+                    ? null
+                    : t.id,
               ),
             ),
           ),

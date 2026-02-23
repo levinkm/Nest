@@ -13,6 +13,8 @@ class TransactionModel {
       fee: json['fee'] ?? 0.0,
       accountId: json['accountId'],
       toAccountId: json['toAccountId'],
+      counterparty: json['counterparty'],
+      accountBalance: json['accountBalance'],
     );
   }
 
@@ -28,6 +30,8 @@ class TransactionModel {
       'fee': transaction.fee,
       'accountId': transaction.accountId,
       'toAccountId': transaction.toAccountId,
+      'counterparty': transaction.counterparty,
+      'accountBalance': transaction.accountBalance,
     };
   }
 }

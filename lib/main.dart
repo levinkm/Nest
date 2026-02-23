@@ -49,14 +49,26 @@ void main() async {
       return true;
     };
   } catch (e) {
-    // Crashlytics not configured, skip initialization
     if (kDebugMode) {
       print('Crashlytics not configured: $e');
     }
   }
 
-  await RemoteConfigService().initialize();
-  await FCMService().initialize();
+  try {
+    await RemoteConfigService().initialize();
+  } catch (e) {
+    if (kDebugMode) {
+      print('Remote Config initialization failed: $e');
+    }
+  }
+
+  try {
+    await FCMService().initialize();
+  } catch (e) {
+    if (kDebugMode) {
+      print('FCM initialization failed: $e');
+    }
+  }
 
   runApp(const MyApp());
 }
@@ -245,7 +257,13 @@ class _MyAppState extends State<MyApp> {
       ],
       child: MaterialApp(
         navigatorKey: _navigatorKey,
-        theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          useMaterial3: true,
+          appBarTheme: const AppBarTheme(
+            iconTheme: IconThemeData(color: Colors.white),
+          ),
+        ),
         initialRoute: '/auth',
         routes: {
           '/auth': (context) => const AuthWrapper(),

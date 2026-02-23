@@ -32,6 +32,10 @@ mixin _$Transaction {
   double get fee => throw _privateConstructorUsedError;
   String? get accountId => throw _privateConstructorUsedError;
   String? get toAccountId => throw _privateConstructorUsedError;
+  String? get notes => throw _privateConstructorUsedError;
+  String? get counterparty => throw _privateConstructorUsedError;
+  List<String> get tags => throw _privateConstructorUsedError;
+  double? get accountBalance => throw _privateConstructorUsedError;
 
   /// Serializes this Transaction to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -62,6 +66,10 @@ abstract class $TransactionCopyWith<$Res> {
     double fee,
     String? accountId,
     String? toAccountId,
+    String? notes,
+    String? counterparty,
+    List<String> tags,
+    double? accountBalance,
   });
 }
 
@@ -91,6 +99,10 @@ class _$TransactionCopyWithImpl<$Res, $Val extends Transaction>
     Object? fee = null,
     Object? accountId = freezed,
     Object? toAccountId = freezed,
+    Object? notes = freezed,
+    Object? counterparty = freezed,
+    Object? tags = null,
+    Object? accountBalance = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -138,6 +150,22 @@ class _$TransactionCopyWithImpl<$Res, $Val extends Transaction>
                 ? _value.toAccountId
                 : toAccountId // ignore: cast_nullable_to_non_nullable
                       as String?,
+            notes: freezed == notes
+                ? _value.notes
+                : notes // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            counterparty: freezed == counterparty
+                ? _value.counterparty
+                : counterparty // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            tags: null == tags
+                ? _value.tags
+                : tags // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
+            accountBalance: freezed == accountBalance
+                ? _value.accountBalance
+                : accountBalance // ignore: cast_nullable_to_non_nullable
+                      as double?,
           )
           as $Val,
     );
@@ -165,6 +193,10 @@ abstract class _$$TransactionImplCopyWith<$Res>
     double fee,
     String? accountId,
     String? toAccountId,
+    String? notes,
+    String? counterparty,
+    List<String> tags,
+    double? accountBalance,
   });
 }
 
@@ -193,6 +225,10 @@ class __$$TransactionImplCopyWithImpl<$Res>
     Object? fee = null,
     Object? accountId = freezed,
     Object? toAccountId = freezed,
+    Object? notes = freezed,
+    Object? counterparty = freezed,
+    Object? tags = null,
+    Object? accountBalance = freezed,
   }) {
     return _then(
       _$TransactionImpl(
@@ -240,6 +276,22 @@ class __$$TransactionImplCopyWithImpl<$Res>
             ? _value.toAccountId
             : toAccountId // ignore: cast_nullable_to_non_nullable
                   as String?,
+        notes: freezed == notes
+            ? _value.notes
+            : notes // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        counterparty: freezed == counterparty
+            ? _value.counterparty
+            : counterparty // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        tags: null == tags
+            ? _value._tags
+            : tags // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
+        accountBalance: freezed == accountBalance
+            ? _value.accountBalance
+            : accountBalance // ignore: cast_nullable_to_non_nullable
+                  as double?,
       ),
     );
   }
@@ -260,7 +312,11 @@ class _$TransactionImpl implements _Transaction {
     this.fee = 0.0,
     this.accountId,
     this.toAccountId,
-  });
+    this.notes,
+    this.counterparty,
+    final List<String> tags = const [],
+    this.accountBalance,
+  }) : _tags = tags;
 
   factory _$TransactionImpl.fromJson(Map<String, dynamic> json) =>
       _$$TransactionImplFromJson(json);
@@ -289,10 +345,25 @@ class _$TransactionImpl implements _Transaction {
   final String? accountId;
   @override
   final String? toAccountId;
+  @override
+  final String? notes;
+  @override
+  final String? counterparty;
+  final List<String> _tags;
+  @override
+  @JsonKey()
+  List<String> get tags {
+    if (_tags is EqualUnmodifiableListView) return _tags;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_tags);
+  }
+
+  @override
+  final double? accountBalance;
 
   @override
   String toString() {
-    return 'Transaction(id: $id, amount: $amount, category: $category, description: $description, date: $date, type: $type, transactionId: $transactionId, isTransfer: $isTransfer, fee: $fee, accountId: $accountId, toAccountId: $toAccountId)';
+    return 'Transaction(id: $id, amount: $amount, category: $category, description: $description, date: $date, type: $type, transactionId: $transactionId, isTransfer: $isTransfer, fee: $fee, accountId: $accountId, toAccountId: $toAccountId, notes: $notes, counterparty: $counterparty, tags: $tags, accountBalance: $accountBalance)';
   }
 
   @override
@@ -316,7 +387,13 @@ class _$TransactionImpl implements _Transaction {
             (identical(other.accountId, accountId) ||
                 other.accountId == accountId) &&
             (identical(other.toAccountId, toAccountId) ||
-                other.toAccountId == toAccountId));
+                other.toAccountId == toAccountId) &&
+            (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.counterparty, counterparty) ||
+                other.counterparty == counterparty) &&
+            const DeepCollectionEquality().equals(other._tags, _tags) &&
+            (identical(other.accountBalance, accountBalance) ||
+                other.accountBalance == accountBalance));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -334,6 +411,10 @@ class _$TransactionImpl implements _Transaction {
     fee,
     accountId,
     toAccountId,
+    notes,
+    counterparty,
+    const DeepCollectionEquality().hash(_tags),
+    accountBalance,
   );
 
   /// Create a copy of Transaction
@@ -363,6 +444,10 @@ abstract class _Transaction implements Transaction {
     final double fee,
     final String? accountId,
     final String? toAccountId,
+    final String? notes,
+    final String? counterparty,
+    final List<String> tags,
+    final double? accountBalance,
   }) = _$TransactionImpl;
 
   factory _Transaction.fromJson(Map<String, dynamic> json) =
@@ -390,6 +475,14 @@ abstract class _Transaction implements Transaction {
   String? get accountId;
   @override
   String? get toAccountId;
+  @override
+  String? get notes;
+  @override
+  String? get counterparty;
+  @override
+  List<String> get tags;
+  @override
+  double? get accountBalance;
 
   /// Create a copy of Transaction
   /// with the given fields replaced by the non-null parameter values.

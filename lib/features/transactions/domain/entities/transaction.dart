@@ -17,6 +17,10 @@ class Transaction with _$Transaction {
     @Default(0.0) double fee,
     String? accountId,
     String? toAccountId,
+    String? notes,
+    String? counterparty,
+    @Default([]) List<String> tags,
+    double? accountBalance,
   }) = _Transaction;
 
   factory Transaction.fromJson(Map<String, dynamic> json) =>

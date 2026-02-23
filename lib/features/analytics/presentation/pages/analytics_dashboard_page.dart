@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/transaction_description_helper.dart';
 import '../../../transactions/data/datasources/local_database.dart';
 import '../../../accounts/data/services/account_aggregation_service.dart';
 import '../../data/services/transaction_analytics.dart';
@@ -24,6 +25,7 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
   List _international = [];
   Map<String, dynamic> _p2p = {};
   List<dynamic> _transactions = [];
+  String? _expandedTransactionId;
 
   @override
   void initState() {
@@ -321,46 +323,314 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
           const SizedBox(height: 16),
           ...top5.map((entry) {
             final percentage = (entry.value / total * 100);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        entry.key,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 14,
+            final categoryTransactions = _transactions
+                .where((t) => t.category == entry.key)
+                .toList();
+            return GestureDetector(
+              onTap: () =>
+                  _showCategoryDetails(entry.key, categoryTransactions),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'KSh ${entry.value.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                        Row(
+                          children: [
+                            Text(
+                              'KSh ${entry.value.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(
+                              Icons.chevron_right,
+                              color: AppColors.textSecondary,
+                              size: 18,
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: percentage / 100,
-                      backgroundColor: AppColors.surfaceLight,
-                      color: AppColors.primary,
-                      minHeight: 6,
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: percentage / 100,
+                        backgroundColor: AppColors.surfaceLight,
+                        color: AppColors.primary,
+                        minHeight: 6,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }),
         ],
+      ),
+    );
+  }
+
+  void _showCategoryDetails(String category, List transactions) {
+    final total = transactions.fold(0.0, (sum, t) => sum + t.amount);
+    final avg = total / transactions.length;
+    final sorted = transactions..sort((a, b) => b.date.compareTo(a.date));
+    final min = transactions
+        .map((t) => t.amount)
+        .reduce((a, b) => a < b ? a : b);
+    final max = transactions
+        .map((t) => t.amount)
+        .reduce((a, b) => a > b ? a : b);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.textSecondary.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      category,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            const Text(
+                              'Total',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                            Text(
+                              'KSh ${total.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            const Text(
+                              'Average',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                            Text(
+                              'KSh ${avg.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            const Text(
+                              'Count',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                            Text(
+                              '${transactions.length}',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            const Text(
+                              'Min/Max',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                            Text(
+                              '${min.toStringAsFixed(0)}/${max.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: AppColors.border),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Transactions',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '${transactions.length} total',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: sorted.length,
+                  itemBuilder: (context, index) {
+                    final t = sorted[index];
+                    final isExpanded = _expandedTransactionId == t.id;
+                    return GestureDetector(
+                      onTap: () => setModalState(
+                        () => _expandedTransactionId = isExpanded ? null : t.id,
+                      ),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceLight,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        TransactionDescriptionHelper.getCleanDescription(
+                                          t.description,
+                                          t.counterparty,
+                                          t.type,
+                                        ),
+                                        style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        DateFormat(
+                                          'MMM dd, yyyy',
+                                        ).format(t.date),
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  'KSh ${t.amount.toStringAsFixed(0)}',
+                                  style: const TextStyle(
+                                    color: AppColors.expense,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (isExpanded) ...[
+                              const Divider(
+                                color: AppColors.border,
+                                height: 24,
+                              ),
+                              if (t.transactionId != null)
+                                _buildDetailRow('Reference', t.transactionId!),
+                              _buildDetailRow(
+                                'Category',
+                                t.category ?? 'Uncategorized',
+                              ),
+                              _buildDetailRow('Type', t.type),
+                              if (t.accountBalance != null)
+                                _buildDetailRow(
+                                  'Balance',
+                                  'KSh ${t.accountBalance!.toStringAsFixed(0)}',
+                                ),
+                              _buildDetailRow(
+                                'Time',
+                                DateFormat('HH:mm:ss').format(t.date),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -487,19 +757,205 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
             )
           else
             ...merchants.map(
-              (m) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+              (m) => GestureDetector(
+                onTap: () async {
+                  final merchantName = m['name'] as String;
+                  final merchantTransactions = _transactions
+                      .where((t) => t.description.contains(merchantName))
+                      .toList();
+                  if (merchantTransactions.isNotEmpty) {
+                    _showMerchantDetails(merchantName, merchantTransactions);
+                  }
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          m['name'],
+                          style: const TextStyle(color: AppColors.textPrimary),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            '${m['count']}x • KSh ${NumberFormat('#,##0').format(m['total'])}',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.chevron_right,
+                            color: AppColors.textSecondary,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showMerchantDetails(String merchant, List transactions) {
+    final total = transactions.fold(0.0, (sum, t) => sum + t.amount);
+    final avg = total / transactions.length;
+    final sorted = transactions..sort((a, b) => b.date.compareTo(a.date));
+    final min = transactions
+        .map((t) => t.amount)
+        .reduce((a, b) => a < b ? a : b);
+    final max = transactions
+        .map((t) => t.amount)
+        .reduce((a, b) => a > b ? a : b);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.textSecondary.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      merchant,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            const Text(
+                              'Total',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                            Text(
+                              'KSh ${total.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            const Text(
+                              'Average',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                            Text(
+                              'KSh ${avg.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            const Text(
+                              'Visits',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                            Text(
+                              '${transactions.length}',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            const Text(
+                              'Min/Max',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                            Text(
+                              '${min.toStringAsFixed(0)}/${max.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: AppColors.border),
+              Padding(
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Text(
-                        m['name'],
-                        style: const TextStyle(color: AppColors.textPrimary),
+                    const Text(
+                      'Transactions',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      '${m['count']}x • KSh ${NumberFormat('#,##0').format(m['total'])}',
+                      '${transactions.length} total',
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
@@ -508,8 +964,99 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
                   ],
                 ),
               ),
-            ),
-        ],
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: sorted.length,
+                  itemBuilder: (context, index) {
+                    final t = sorted[index];
+                    final isExpanded = _expandedTransactionId == t.id;
+                    return GestureDetector(
+                      onTap: () => setModalState(
+                        () => _expandedTransactionId = isExpanded ? null : t.id,
+                      ),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceLight,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        TransactionDescriptionHelper.getCleanDescription(
+                                          t.description,
+                                          t.counterparty,
+                                          t.type,
+                                        ),
+                                        style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        DateFormat(
+                                          'MMM dd, yyyy',
+                                        ).format(t.date),
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  'KSh ${t.amount.toStringAsFixed(0)}',
+                                  style: const TextStyle(
+                                    color: AppColors.expense,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (isExpanded) ...[
+                              const Divider(
+                                color: AppColors.border,
+                                height: 24,
+                              ),
+                              if (t.transactionId != null)
+                                _buildDetailRow('Reference', t.transactionId!),
+                              _buildDetailRow(
+                                'Category',
+                                t.category ?? 'Uncategorized',
+                              ),
+                              _buildDetailRow('Type', t.type),
+                              if (t.accountBalance != null)
+                                _buildDetailRow(
+                                  'Balance',
+                                  'KSh ${t.accountBalance!.toStringAsFixed(0)}',
+                                ),
+                              _buildDetailRow(
+                                'Time',
+                                DateFormat('HH:mm:ss').format(t.date),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -540,23 +1087,53 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
             )
           else
             ..._recurring.map(
-              (r) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      r['merchant'],
-                      style: const TextStyle(color: AppColors.textPrimary),
-                    ),
-                    Text(
-                      '${r['frequency']} • ~KSh ${NumberFormat('#,##0').format(r['avgAmount'])}',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
+              (r) => GestureDetector(
+                onTap: () async {
+                  final merchantName = r['merchant'] as String;
+                  final merchantTransactions = _transactions
+                      .where((t) => t.description.contains(merchantName))
+                      .toList();
+                  if (merchantTransactions.isNotEmpty) {
+                    _showMerchantDetails(merchantName, merchantTransactions);
+                  }
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              r['merchant'],
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              '${r['frequency']} • ~KSh ${NumberFormat('#,##0').format(r['avgAmount'])}',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      const Icon(
+                        Icons.chevron_right,
+                        color: AppColors.textSecondary,
+                        size: 20,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -585,8 +1162,13 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
           ),
           const SizedBox(height: 12),
           ..._paymentMethods.entries.map(
-            (e) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+            (e) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -725,27 +1307,53 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
             ...lending.entries
                 .take(5)
                 .map(
-                  (e) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            e.key,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
+                  (e) => GestureDetector(
+                    onTap: () async {
+                      final personName = e.key as String;
+                      final personTransactions = _transactions
+                          .where((t) => t.description.contains(personName))
+                          .toList();
+                      if (personTransactions.isNotEmpty) {
+                        _showMerchantDetails(personName, personTransactions);
+                      }
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceLight,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              e.key,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ),
-                        ),
-                        Text(
-                          'KSh ${NumberFormat('#,##0').format(e.value['total'])}',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
+                          Row(
+                            children: [
+                              Text(
+                                'KSh ${NumberFormat('#,##0').format(e.value['total'])}',
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.chevron_right,
+                                color: AppColors.textSecondary,
+                                size: 20,
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -784,4 +1392,27 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
       ),
     );
   }
+}
+
+Widget _buildDetailRow(String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    ),
+  );
 }

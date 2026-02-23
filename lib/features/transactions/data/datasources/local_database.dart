@@ -19,7 +19,7 @@ class LocalDatabase {
     String path = join(await getDatabasesPath(), AppConstants.dbName);
     return await openDatabase(
       path,
-      version: AppConstants.dbVersion,
+      version: 15,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -478,6 +478,64 @@ class LocalDatabase {
         if (kDebugMode) print('Index creation error: $e');
       }
     }
+    if (oldVersion < 13) {
+      // Add notes and tags columns to transactions
+      try {
+        await db.execute('ALTER TABLE transactions ADD COLUMN notes TEXT');
+        await db.execute('ALTER TABLE transactions ADD COLUMN tags TEXT');
+      } catch (e) {
+        if (kDebugMode) print('Notes/Tags column migration: $e');
+      }
+    }
+    if (oldVersion < 14) {
+      // Add counterparty column to transactions
+      try {
+        await db.execute(
+          'ALTER TABLE transactions ADD COLUMN counterparty TEXT',
+        );
+      } catch (e) {
+        if (kDebugMode) print('Counterparty column migration: $e');
+      }
+    }
+    if (oldVersion < 15) {
+      // Add accountBalance column to transactions
+      try {
+        await db.execute(
+          'ALTER TABLE transactions ADD COLUMN accountBalance REAL',
+        );
+      } catch (e) {
+        if (kDebugMode) print('AccountBalance column migration: $e');
+      }
+    }
+  }
+
+  Future<void> _ensureColumnsExist(Database db) async {
+    try {
+      // Check and add counterparty column if missing
+      final tableInfo = await db.rawQuery('PRAGMA table_info(transactions)');
+      final hasCounterparty = tableInfo.any(
+        (col) => col['name'] == 'counterparty',
+      );
+      final hasAccountBalance = tableInfo.any(
+        (col) => col['name'] == 'accountBalance',
+      );
+
+      if (!hasCounterparty) {
+        await db.execute(
+          'ALTER TABLE transactions ADD COLUMN counterparty TEXT',
+        );
+        if (kDebugMode) print('Added missing counterparty column');
+      }
+
+      if (!hasAccountBalance) {
+        await db.execute(
+          'ALTER TABLE transactions ADD COLUMN accountBalance REAL',
+        );
+        if (kDebugMode) print('Added missing accountBalance column');
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error ensuring columns exist: $e');
+    }
   }
 
   Future<void> insertTransaction(domain.Transaction transaction) async {
@@ -502,6 +560,9 @@ class LocalDatabase {
         }
       }
 
+      // Ensure columns exist before inserting
+      await _ensureColumnsExist(db);
+
       await db.insert(
         'transactions',
         TransactionModel.toJson(transaction),
@@ -519,14 +580,17 @@ class LocalDatabase {
 
   Future<void> removeDuplicateTransactions() async {
     final db = await database;
-    // Delete duplicates keeping only one occurrence based on description, amount, and date
+
+    // Remove duplicates with same transactionId (M-Pesa reference code)
+    // Keep only the M-Pesa SMS (not bank confirmation)
     await db.execute('''
       DELETE FROM transactions 
       WHERE rowid NOT IN (
         SELECT MIN(rowid) 
         FROM transactions 
-        GROUP BY description, amount, strftime('%Y-%m-%d %H:%M', date)
-      )
+        WHERE transactionId IS NOT NULL
+        GROUP BY transactionId
+      ) AND transactionId IS NOT NULL
     ''');
   }
 
@@ -545,6 +609,37 @@ class LocalDatabase {
   Future<void> deleteTransaction(String id) async {
     final db = await database;
     await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> updateTransaction(
+    String id,
+    Map<String, dynamic> updates,
+  ) async {
+    final db = await database;
+    await db.update('transactions', updates, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> bulkDeleteTransactions(List<String> ids) async {
+    final db = await database;
+    final batch = db.batch();
+    for (final id in ids) {
+      batch.delete('transactions', where: 'id = ?', whereArgs: [id]);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<void> bulkUpdateCategory(List<String> ids, String category) async {
+    final db = await database;
+    final batch = db.batch();
+    for (final id in ids) {
+      batch.update(
+        'transactions',
+        {'category': category},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   Future<void> insertBudget(Budget budget) async {

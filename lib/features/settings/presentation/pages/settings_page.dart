@@ -8,6 +8,7 @@ import '../../../transactions/presentation/pages/classification_rules_page.dart'
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_helper.dart';
 import '../../../../core/services/backup_service.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../notifications/presentation/pages/notification_settings_page.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -32,10 +33,12 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _currency = prefs.getString('currency') ?? 'KSh';
-      _smsDaysBack = prefs.getInt('sms_days_back') ?? 30;
-      _themeMode = prefs.getString('theme_mode') ?? 'system';
-      _autoSync = prefs.getBool('auto_sync') ?? true;
+      _currency = prefs.getString('currency') ?? AppConstants.defaultCurrency;
+      _smsDaysBack =
+          prefs.getInt('sms_days_back') ?? AppConstants.defaultSmsDaysBack;
+      _themeMode =
+          prefs.getString('theme_mode') ?? AppConstants.defaultThemeMode;
+      _autoSync = prefs.getBool('auto_sync') ?? AppConstants.defaultAutoSync;
     });
   }
 
@@ -175,14 +178,13 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showCurrencyPicker() {
-    final currencies = ['KSh', 'USD', 'EUR', 'GBP', 'TZS', 'UGX'];
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Select Currency'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: currencies
+          children: AppConstants.supportedCurrencies
               .map(
                 (c) => RadioListTile<String>(
                   title: Text(c),
@@ -206,14 +208,13 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showSmsDaysBackPicker() {
-    final days = [7, 14, 30, 60, 90, 180];
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('SMS Days Back'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: days
+          children: AppConstants.smsDaysBackOptions
               .map(
                 (d) => RadioListTile<int>(
                   title: Text('$d days'),

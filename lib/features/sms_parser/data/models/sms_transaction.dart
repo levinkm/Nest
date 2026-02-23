@@ -39,6 +39,8 @@ class SmsTransaction with _$SmsTransaction {
       transactionId: transactionId,
       isTransfer: isTransfer,
       fee: fee,
+      counterparty: counterparty,
+      accountBalance: recordedBalance,
     );
   }
 }

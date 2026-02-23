@@ -120,7 +120,7 @@ class SmsParserDataSource {
       if (type == null) return null;
 
       final isTransfer = _isInternalTransfer(body);
-      category = isTransfer ? 'Transfer' : _categorizeTransaction(body);
+      category = isTransfer ? 'Transfer' : _categorizeTransaction(body, type);
     }
 
     final transactionId = _extractTransactionId(body);
@@ -324,7 +324,7 @@ class SmsParserDataSource {
     );
   }
 
-  String _categorizeTransaction(String message) {
+  String _categorizeTransaction(String message, String? type) {
     final keywords = {
       'Investments': ['ziidi', 'invested', 'investment', 'mmf'],
       'Food & Dining': [
@@ -384,6 +384,21 @@ class SmsParserDataSource {
         return entry.key;
       }
     }
+
+    // Fallback: Auto-categorize based on transaction type if no keyword match
+    if (type == 'expense') {
+      if (lowerMsg.contains('till') ||
+          lowerMsg.contains('paybill') ||
+          lowerMsg.contains('pochi') ||
+          lowerMsg.contains('paid to')) {
+        return 'Bills & Utilities';
+      }
+
+      if (lowerMsg.contains('sent to')) {
+        return 'Family & Friends';
+      }
+    }
+
     return 'Other';
   }
 

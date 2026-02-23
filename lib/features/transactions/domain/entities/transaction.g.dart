@@ -19,6 +19,12 @@ _$TransactionImpl _$$TransactionImplFromJson(Map<String, dynamic> json) =>
       fee: (json['fee'] as num?)?.toDouble() ?? 0.0,
       accountId: json['accountId'] as String?,
       toAccountId: json['toAccountId'] as String?,
+      notes: json['notes'] as String?,
+      counterparty: json['counterparty'] as String?,
+      tags:
+          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+          const [],
+      accountBalance: (json['accountBalance'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$$TransactionImplToJson(_$TransactionImpl instance) =>
@@ -34,4 +40,8 @@ Map<String, dynamic> _$$TransactionImplToJson(_$TransactionImpl instance) =>
       'fee': instance.fee,
       'accountId': instance.accountId,
       'toAccountId': instance.toAccountId,
+      'notes': instance.notes,
+      'counterparty': instance.counterparty,
+      'tags': instance.tags,
+      'accountBalance': instance.accountBalance,
     };
